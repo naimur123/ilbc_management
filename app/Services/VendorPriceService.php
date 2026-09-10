@@ -126,8 +126,12 @@ class VendorPriceService
         })->sortBy('final_landed_cost')->values();
 
         if ($rows->isNotEmpty()) {
-            $rows[0]['is_best_price'] = true;
-        }
+    $firstRow = $rows->first();
+    $firstRow['is_best_price'] = true;
+
+    $rows->put(0, $firstRow);
+}
+
 
         return $rows->all();
     }
