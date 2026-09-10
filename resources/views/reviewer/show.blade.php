@@ -34,14 +34,24 @@
     </div>
 </div>
 
+@php($missingVendorItems = $request->items->filter(fn($i) => ! $i->vendorSelection))
 <div class="kpi-card mb-3 p-0">
-    <div class="p-3 pb-0"><h6 class="text-primary">Items — Vendor Selection</h6></div>
+    <div class="p-3 pb-0">
+        <h6 class="text-primary">Items — Vendor Selection</h6>
+        @if($missingVendorItems->isNotEmpty())
+            <div class="alert alert-warning py-2 px-3 mb-2 small">
+                <i class="bi bi-exclamation-triangle"></i>
+                This is the per-item cost/margin vendor (Section 12-13) — a separate thing from the "Loading Source" vendor below, which is who will physically do the loading.
+                Click <strong>Compare Vendors</strong> and pick one for every row marked <strong>—</strong> below before you can Approve.
+            </div>
+        @endif
+    </div>
     <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">
         <thead class="table-light"><tr><th>Product / SKU</th><th>Qty</th><th>Selling</th><th>Selected Vendor</th><th>Unit Cost</th><th>Final Cost</th><th>Margin %</th><th></th></tr></thead>
         <tbody>
         @foreach($request->items as $item)
-            <tr>
+            <tr class="{{ ! $item->vendorSelection ? 'table-warning' : '' }}">
                 <td>{{ $item->product->name ?? '-' }}<br><small class="text-muted">{{ $item->sku->sku_code ?? '' }}</small></td>
                 <td>{{ $item->quantity }}</td>
                 <td>{{ number_format($item->total_selling_price,2) }}</td>
@@ -53,7 +63,7 @@
                 <td>{{ $item->vendorSelection ? number_format($item->vendorSelection->unit_cost,2) : '—' }}</td>
                 <td>{{ $item->vendorSelection ? number_format($item->vendorSelection->final_landed_cost,2) : '—' }}</td>
                 <td>{{ $item->vendorSelection ? number_format($item->vendorSelection->gross_margin_percent,2).'%' : '—' }}</td>
-                <td><a href="{{ route('requests.items.vendor-comparison', [$request, $item]) }}" class="btn btn-sm btn-outline-primary">Compare Vendors</a></td>
+                <td><a href="{{ route('requests.items.vendor-comparison', [$request, $item]) }}" class="btn btn-sm {{ $item->vendorSelection ? 'btn-outline-primary' : 'btn-primary' }}">Compare Vendors</a></td>
             </tr>
         @endforeach
         </tbody>
@@ -94,13 +104,16 @@
                     <option value="{{ $v->id }}" {{ old('loading_source_vendor_id', $approval->loading_source_vendor_id) == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>
                 @endforeach
             </select>
-            <div class="form-text">Which vendor will perform the loading / installation once approved.</div>
+            <div class="form-text">Which vendor will perform the loading / installation once approved — separate from the per-item cost vendor above.</div>
         </div>
         <div class="col-md-8"></div>
         <div class="col-12"><label class="form-label">Special Instructions</label><textarea class="form-control" name="special_instructions"></textarea></div>
         <div class="col-12"><label class="form-label">Remarks (mandatory for Return/Reject/Hold)</label><textarea class="form-control" name="remarks"></textarea></div>
+        @if($missingVendorItems->isNotEmpty())
+            <div class="col-12"><div class="text-danger small">Approve is disabled until every item above has a cost vendor selected via "Compare Vendors".</div></div>
+        @endif
         <div class="col-12">
-            <button class="btn btn-success" name="decision" value="APPROVE"><i class="bi bi-check-circle"></i> Approve</button>
+            <button class="btn btn-success" name="decision" value="APPROVE" {{ $missingVendorItems->isNotEmpty() ? 'disabled' : '' }}><i class="bi bi-check-circle"></i> Approve</button>
             <button class="btn btn-outline-secondary" name="decision" value="RETURN_TO_SALES">Return to Sales</button>
             <button class="btn btn-danger" name="decision" value="REJECT">Reject</button>
             <button class="btn btn-warning" name="decision" value="HOLD">Hold</button>

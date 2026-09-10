@@ -29,5 +29,5 @@ return [
     // `php artisan migrate --seed` run directly from the command line.
     // Defaults to false; set ILBC_SEED_DEMO_DATA=true in .env before
     // seeding if you want the sample data loaded that way.
-    'seed_demo_data' => env('ILBC_SEED_DEMO_DATA', true),
+    'seed_demo_data' => env('ILBC_SEED_DEMO_DATA', false),
 ];
