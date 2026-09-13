@@ -37,6 +37,59 @@
     @endforeach
 </div>
 
+{{-- SLA Management (change request, Sept 2026): the mini monitoring/reminder
+     system's dashboard cards — separate from the "SLA Overdue" stage-aging
+     card above, which is the older per-stage SLAService KPI. --}}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="mb-0"><i class="bi bi-stopwatch"></i> SLA Management</h6>
+    @can('sla.view')<a href="{{ route('sla.index') }}" class="small">View all SLAs &raquo;</a>@endcan
+</div>
+<div class="row g-3 mb-3">
+    @foreach([
+        ['Active SLA', $slaKpi['active'], 'bi-lightning-charge', 'success'],
+        ['Due Today', $slaKpi['due_today'], 'bi-calendar-event', 'warning'],
+        ['Due Within 4h', $slaKpi['due_within_4h'], 'bi-hourglass-split', 'warning'],
+        ['Overdue', $slaKpi['overdue'], 'bi-exclamation-triangle', 'danger'],
+        ['Completed Within SLA', $slaKpi['completed_within'], 'bi-check-circle', 'success'],
+        ['SLA Compliance', $slaKpi['compliance_percent'].'%', 'bi-graph-up-arrow', $slaKpi['compliance_percent'] >= 90 ? 'success' : ($slaKpi['compliance_percent'] >= 75 ? 'warning' : 'danger')],
+    ] as [$label, $value, $icon, $color])
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div><div class="text-muted small">{{ $label }}</div><div class="kpi-value">{{ $value }}</div></div>
+                <i class="bi {{ $icon }} fs-4 text-{{ $color }}"></i>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+@if($mySlaTasks->isNotEmpty())
+<div class="kpi-card mb-3">
+    <h6>My SLA Tasks</h6>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Request</th><th>Customer</th><th>SLA</th><th>Owner</th><th>Deadline</th><th>Remaining</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach($mySlaTasks as $t)
+                @php($remaining = now()->diffInMinutes($t->target_at, false))
+                @php($rowColor = match($t->status) { 'OVERDUE' => 'text-danger', 'DUE_SOON' => 'text-warning', default => 'text-success' })
+                <tr>
+                    <td><a href="{{ route('sla.show', $t) }}">{{ $t->request->request_no ?? '-' }}</a></td>
+                    <td>{{ $t->request->customer->name ?? '-' }}</td>
+                    <td>{{ ucfirst(strtolower($t->sla_type)) }}</td>
+                    <td>{{ $t->responsibleUser->name ?? $t->responsible_team ?? '-' }}</td>
+                    <td>{{ $t->target_at->format('d-m-Y h:i A') }}</td>
+                    <td class="{{ $rowColor }} fw-semibold">{{ $remaining >= 0 ? intdiv($remaining,60).'h '.($remaining%60).'m' : '-'.intdiv(abs($remaining),60).'h '.(abs($remaining)%60).'m' }}</td>
+                    <td><span class="{{ $rowColor }}">{{ str_replace('_',' ',$t->status) }}</span></td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 <div class="row g-3 mb-3">
     <div class="col-lg-4">
         <div class="kpi-card">

@@ -10,6 +10,7 @@ use App\Models\RequestItem;
 use App\Services\AuditLogService;
 use App\Services\LoadingService;
 use App\Services\NotificationService;
+use App\Services\SlaMonitoringService;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,7 @@ class LoadingController extends Controller
         private WorkflowService $workflow,
         private NotificationService $notifications,
         private AuditLogService $auditLog,
+        private SlaMonitoringService $slaMonitoring,
     ) {
     }
 
@@ -182,6 +184,9 @@ class LoadingController extends Controller
 
         if ($request->items->every(fn (RequestItem $i) => $i->fresh()->loadingRecord?->status === 'COMPLETED')) {
             $this->workflow->transition($request, 'AUDIT_PENDING', 'AUDIT', 'LOADING_COMPLETE', 'All items loaded');
+            // SLA Management (change request, Sept 2026): the SLA clock
+            // starts the moment every item in the request finishes Loading.
+            $this->slaMonitoring->createForRequest($request);
             $this->notifications->notifyPermission('audit.approve', 'Audit required', "Request {$request->request_no} is ready for Audit.", $request->id, route('audit.index'));
         }
 

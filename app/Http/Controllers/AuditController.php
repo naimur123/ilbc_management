@@ -6,6 +6,7 @@ use App\Models\RequestItem;
 use App\Services\AuditService;
 use App\Services\BillingService;
 use App\Services\NotificationService;
+use App\Services\SlaMonitoringService;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -49,6 +50,7 @@ class AuditController extends Controller
         private AuditService $auditService,
         private WorkflowService $workflow,
         private NotificationService $notifications,
+        private SlaMonitoringService $slaMonitoring,
     ) {
     }
 
@@ -84,7 +86,16 @@ class AuditController extends Controller
         $this->auditService->persistVariances($record, $variances);
         $record->refresh()->load('checklists');
 
-        return view('audit.show', compact('item', 'record', 'variances'));
+        // SLA Management (change request, Sept 2026) — "SLA Before Audit":
+        // the Auditor sees Target vs Actual / Met-Breached for every SLA
+        // commitment on this request, and, if the Admin has switched on
+        // "SLA Completion Required Before Audit", Approve is blocked here.
+        $this->slaMonitoring->refreshAll();
+        $item->request->load('slas');
+        $slaSummary = $this->slaMonitoring->summaryForRequest($item->request);
+        $slaBlocksAudit = $this->slaMonitoring->auditIsBlocked($item->request);
+
+        return view('audit.show', compact('item', 'record', 'variances', 'slaSummary', 'slaBlocksAudit'));
     }
 
     public function decide(Request $httpRequest, RequestItem $item, BillingService $billingService)
@@ -100,6 +111,13 @@ class AuditController extends Controller
 
         if ($data['decision'] !== 'APPROVE' && empty($data['remarks'])) {
             return back()->withErrors(['remarks' => 'Reason is mandatory for Return/Hold.']);
+        }
+
+        // SLA Management: only enforced when the Admin has switched on
+        // "SLA Completion Required Before Audit" in SLA Configuration —
+        // otherwise SLA is a performance measurement only and never blocks.
+        if ($data['decision'] === 'APPROVE' && $this->slaMonitoring->auditIsBlocked($item->request)) {
+            return back()->withErrors(['remarks' => 'This request cannot be Audit-approved yet — its SLA is still open and "SLA Completion Required Before Audit" is enabled. Complete or waive the SLA first.']);
         }
 
         $record = $item->auditRecord;

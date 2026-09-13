@@ -7,6 +7,7 @@ use App\Models\BillingType;
 use App\Models\Currency;
 use App\Models\Department;
 use App\Models\PaymentTerm;
+use App\Models\SlaConfiguration;
 use App\Models\SlaRule;
 use App\Models\SubscriptionType;
 use App\Models\Tax;
@@ -31,6 +32,7 @@ class MasterDataSeeder extends Seeder
         $this->seedDepartments();
         $this->seedWorkflow();
         $this->seedSlaRules();
+        $this->seedSlaConfigurations();
         $this->seedApprovalRules();
     }
 
@@ -113,6 +115,41 @@ class MasterDataSeeder extends Seeder
         foreach ($rules as [$key, $label, $hours]) {
             SlaRule::firstOrCreate(['stage_key' => $key], ['label' => $label, 'sla_hours' => $hours, 'due_soon_threshold_hours' => max(1, (int) round($hours * 0.25))]);
         }
+    }
+
+    /**
+     * Change request (Sept 2026), SLA Management module: a generic fallback
+     * "SLA Configuration" so the module works out of the box before an
+     * Admin has defined anything more specific by product/customer/priority
+     * — matches the worked example in the spec (8-hour Activation SLA).
+     */
+    private function seedSlaConfigurations(): void
+    {
+        SlaConfiguration::firstOrCreate(
+            ['name' => 'Standard Activation SLA'],
+            [
+                'sla_type' => 'ACTIVATION',
+                'priority' => null,
+                'duration_minutes' => 8 * 60,
+                'reminder_before_minutes' => 60,
+                'escalate_after_minutes' => 120,
+                'responsible_team' => 'Operations',
+                'is_active' => true,
+            ]
+        );
+
+        SlaConfiguration::firstOrCreate(
+            ['name' => 'Critical Priority Activation SLA'],
+            [
+                'sla_type' => 'ACTIVATION',
+                'priority' => 'CRITICAL',
+                'duration_minutes' => 1 * 60,
+                'reminder_before_minutes' => 15,
+                'escalate_after_minutes' => 30,
+                'responsible_team' => 'NOC',
+                'is_active' => true,
+            ]
+        );
     }
 
     private function seedApprovalRules(): void

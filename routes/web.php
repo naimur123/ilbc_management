@@ -27,6 +27,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalespersonController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SlaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\VendorPriceController;
@@ -90,6 +91,23 @@ Route::middleware('auth')->group(function () {
     Route::get('loading/{item}', [LoadingController::class, 'show'])->name('loading.show');
     Route::post('loading/{item}/draft', [LoadingController::class, 'saveDraft'])->name('loading.draft');
     Route::post('loading/{item}/complete', [LoadingController::class, 'complete'])->name('loading.complete');
+
+    // ---- SLA Management (change request, Sept 2026) -----------------------
+    // Sits between Loading / Installation and Audit — an SLA record is
+    // created automatically the moment Loading finishes (see
+    // LoadingController::complete()), then monitored here until it's
+    // completed, waived, or overdue.
+    Route::get('sla', [SlaController::class, 'index'])->name('sla.index');
+    Route::post('sla', [SlaController::class, 'store'])->name('sla.store');
+    Route::get('sla-configuration', [SlaController::class, 'configuration'])->name('sla.configuration');
+    Route::post('sla-configuration', [SlaController::class, 'storeConfiguration'])->name('sla.configuration.store');
+    Route::put('sla-configuration/{slaConfiguration}', [SlaController::class, 'updateConfiguration'])->name('sla.configuration.update');
+    Route::delete('sla-configuration/{slaConfiguration}', [SlaController::class, 'destroyConfiguration'])->name('sla.configuration.destroy');
+    Route::post('sla-configuration/settings', [SlaController::class, 'updateSettings'])->name('sla.configuration.settings');
+    Route::get('sla-report', [SlaController::class, 'report'])->name('sla.report');
+    Route::get('sla/{requestSla}', [SlaController::class, 'show'])->name('sla.show');
+    Route::post('sla/{requestSla}/complete', [SlaController::class, 'complete'])->name('sla.complete');
+    Route::post('sla/{requestSla}/waive', [SlaController::class, 'waive'])->name('sla.waive');
 
     // ---- Audit -----------------------------------------------------------
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index');

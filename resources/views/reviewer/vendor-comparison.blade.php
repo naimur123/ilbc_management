@@ -29,12 +29,28 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="10" class="text-center text-muted py-4">No vendor prices configured for this SKU yet.</td></tr>
+            <tr><td colspan="10" class="text-center text-muted py-4">
+                No vendor prices configured for this SKU yet — this is not an error, it just means Vendor Management → Vendor Product Price has no rate saved for <strong>{{ $item->sku->sku_code ?? 'this SKU' }}</strong> from any active vendor.
+            </td></tr>
         @endforelse
         </tbody>
     </table>
     </div>
 </div>
+
+@if(empty($rows))
+    @can('vendor.price_manage')
+    <div class="alert alert-warning mt-3">
+        <i class="bi bi-exclamation-triangle"></i> A vendor price must exist for this SKU before it can be compared and selected here.
+        <a href="{{ route('vendor-prices.create', ['sku_id' => $item->sku->id, 'return_to' => url()->current()]) }}" class="btn btn-sm btn-primary ms-2">Add Vendor Price for {{ $item->sku->sku_code ?? 'this SKU' }}</a>
+    </div>
+    @else
+    <div class="alert alert-warning mt-3">
+        <i class="bi bi-exclamation-triangle"></i> A vendor price must exist for this SKU before it can be compared and selected here. Ask an Admin/Vendor Manager (permission: Vendor → Price Manage) to add one under Vendor Management → Vendor Product Price for <strong>{{ $item->sku->sku_code ?? 'this SKU' }}</strong>.
+    </div>
+    @endcan
+@endif
+
 <a href="{{ route('reviewer.show', $request) }}" class="btn btn-light mt-3">Back to Review</a>
 
 @foreach($rows as $row)

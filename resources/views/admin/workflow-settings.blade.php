@@ -27,8 +27,8 @@
         @foreach($slaRules as $rule)
             <tr>
                 <td>{{ $rule->label }}</td>
-                <td><input type="number" class="form-control form-control-sm" name="sla[{{ $rule->id }}][sla_hours]" value="{{ $rule->sla_hours }}"></td>
-                <td><input type="number" class="form-control form-control-sm" name="sla[{{ $rule->id }}][due_soon_threshold_hours]" value="{{ $rule->due_soon_threshold_hours }}"></td>
+                <td><input type="number" min="1" required class="form-control form-control-sm" name="sla[{{ $rule->id }}][sla_hours]" value="{{ $rule->sla_hours ?: 24 }}"></td>
+                <td><input type="number" min="0" required class="form-control form-control-sm" name="sla[{{ $rule->id }}][due_soon_threshold_hours]" value="{{ $rule->due_soon_threshold_hours ?: 1 }}"></td>
             </tr>
         @endforeach
         </tbody>

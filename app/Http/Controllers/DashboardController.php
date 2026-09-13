@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Request as WorkRequest;
+use App\Models\RequestSla;
 use App\Services\SLAService;
+use App\Services\SlaMonitoringService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(SLAService $sla)
+    public function index(SLAService $sla, SlaMonitoringService $slaMonitoring)
     {
         $user = Auth::user();
         $now = Carbon::now();
@@ -64,6 +66,35 @@ class DashboardController extends Controller
 
         $recentActivity = AuditLog::with('user', 'request')->latest('created_at')->take(8)->get();
 
+        // SLA Management (change request, Sept 2026): dashboard KPI cards +
+        // "My SLA Tasks" — this is the NEW request_slas overlay module,
+        // kept deliberately separate from the SLAService/$sla stage-aging
+        // KPIs above (sla_overdue, slaBuckets), which are untouched.
+        if (\Illuminate\Support\Facades\Schema::hasTable('request_slas')) {
+            $slaMonitoring->refreshAll();
+
+            $slaKpi = [
+                'active' => RequestSla::whereIn('status', ['ACTIVE', 'DUE_SOON'])->count(),
+                'due_today' => RequestSla::whereNotIn('status', RequestSla::FINAL_STATUSES)->whereDate('target_at', $now->toDateString())->count(),
+                'due_within_4h' => RequestSla::whereNotIn('status', RequestSla::FINAL_STATUSES)->whereBetween('target_at', [$now, $now->copy()->addHours(4)])->count(),
+                'overdue' => RequestSla::where('status', 'OVERDUE')->count(),
+                'completed_within' => RequestSla::where('status', 'COMPLETED_WITHIN_SLA')->count(),
+                'breached' => RequestSla::where('status', 'COMPLETED_LATE')->count(),
+            ];
+            $completedTotal = $slaKpi['completed_within'] + $slaKpi['breached'];
+            $slaKpi['compliance_percent'] = $completedTotal > 0 ? round($slaKpi['completed_within'] / $completedTotal * 100, 1) : 100;
+
+            $mySlaTasks = RequestSla::with('request.customer', 'responsibleUser')
+                ->whereNotIn('status', RequestSla::FINAL_STATUSES)
+                ->when(! $user->hasRole(['Super Admin', 'Administrator', 'Management']), fn ($q) => $q->where('responsible_user_id', $user->id))
+                ->orderBy('target_at')->take(8)->get();
+        } else {
+            // sla:process migration not yet run on this install — dashboard
+            // still renders normally with the SLA section simply empty.
+            $slaKpi = ['active' => 0, 'due_today' => 0, 'due_within_4h' => 0, 'overdue' => 0, 'completed_within' => 0, 'breached' => 0, 'compliance_percent' => 100];
+            $mySlaTasks = collect();
+        }
+
         $monthlyFlow = [
             'Sales' => WorkRequest::count(),
             'Billing Cleared' => WorkRequest::where('status', '!=', 'BILLING_CLEARANCE_PENDING')->whereNotIn('status', ['DRAFT'])->count(),
@@ -74,6 +105,6 @@ class DashboardController extends Controller
             'Closed' => WorkRequest::where('status', 'CLOSED')->count(),
         ];
 
-        return view('dashboard.index', compact('kpi', 'statusByStage', 'slaBuckets', 'financial', 'pendingTasks', 'recentActivity', 'monthlyFlow', 'sla'));
+        return view('dashboard.index', compact('kpi', 'statusByStage', 'slaBuckets', 'financial', 'pendingTasks', 'recentActivity', 'monthlyFlow', 'sla', 'slaKpi', 'mySlaTasks'));
     }
 }

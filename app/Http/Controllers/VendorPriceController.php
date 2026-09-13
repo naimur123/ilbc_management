@@ -26,12 +26,18 @@ class VendorPriceController extends Controller
         return view('vendor-prices.index', compact('prices', 'vendors'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        // Reviewer's "Vendor Comparison" screen links here with ?sku_id=
+        // when a request item's SKU has no vendor price configured yet
+        // (Section 12/13), so the Admin/Vendor manager can add one without
+        // hunting for the right SKU in a long dropdown.
         return view('vendor-prices.create', [
             'vendors' => Vendor::where('status', 'ACTIVE')->orderBy('name')->get(),
             'skus' => ProductSku::with('product')->orderBy('sku_code')->get(),
             'currencies' => Currency::orderBy('code')->get(),
+            'preselectedSkuId' => $request->integer('sku_id') ?: null,
+            'returnTo' => $request->query('return_to'),
         ]);
     }
 
@@ -51,11 +57,19 @@ class VendorPriceController extends Controller
             'minimum_quantity' => 'nullable|integer|min:1',
             'price_type' => 'required|in:LIST,PARTNER_DISCOUNTED,PROMO,CUSTOM_QUOTE',
             'remarks' => 'nullable|string',
+            'return_to' => 'nullable|string',
         ]);
 
         $vendor = Vendor::findOrFail($data['vendor_id']);
         $sku = ProductSku::findOrFail($data['product_sku_id']);
         $service->setPrice($vendor, $sku, $data);
+
+        // Sends the user straight back to the Vendor Comparison screen they
+        // came from (see create() above) instead of stranding them on the
+        // Vendor Price list — only ever an internal, relative app path.
+        if (! empty($data['return_to']) && str_starts_with($data['return_to'], '/')) {
+            return redirect()->to($data['return_to'])->with('success', 'Vendor price saved. Previous price kept in history.');
+        }
 
         return redirect()->route('vendor-prices.index')->with('success', 'Vendor price saved. Previous price kept in history.');
     }

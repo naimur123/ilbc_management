@@ -97,6 +97,11 @@ class Request extends Model
         return $this->hasMany(ClosureChecklist::class);
     }
 
+    public function slas()
+    {
+        return $this->hasMany(RequestSla::class);
+    }
+
     public function reopenRequests()
     {
         return $this->hasMany(ReopenRequest::class);

@@ -30,6 +30,33 @@
     </div>
 </div>
 
+{{-- SLA Before Audit (change request, Sept 2026): Target vs Actual, Met/Breached --}}
+@if(count($slaSummary))
+<div class="kpi-card mb-3">
+    <h6 class="text-primary">SLA Status</h6>
+    <table class="table table-sm mb-0">
+        <thead class="table-light"><tr><th>SLA Type</th><th>Target</th><th>Actual Completion</th><th>Result</th></tr></thead>
+        <tbody>
+        @foreach($slaSummary as $row)
+            <tr>
+                <td>{{ ucfirst(strtolower($row['sla']->sla_type)) }} <span class="badge bg-light text-dark border">{{ str_replace('_',' ',$row['sla']->status) }}</span></td>
+                <td>{{ intdiv($row['sla']->duration_minutes,60) }}h {{ $row['sla']->duration_minutes % 60 }}m — due {{ $row['sla']->target_at->format('d-m-Y h:i A') }}</td>
+                <td>{{ $row['actual_duration'] ?? 'Not completed yet' }}</td>
+                <td>
+                    @if($row['met'] === true)<span class="text-success">✅ Met</span>
+                    @elseif($row['met'] === false)<span class="text-danger">❌ Breached by {{ $row['variance'] }}</span>
+                    @else<span class="text-muted">Pending</span>@endif
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @if($slaBlocksAudit)
+        <div class="alert alert-warning mt-2 mb-0 py-2 small"><i class="bi bi-exclamation-triangle"></i> "SLA Completion Required Before Audit" is enabled and at least one SLA above is still open — Approve is disabled until it is completed or waived. <a href="{{ route('sla.index') }}">Go to SLA Management</a>.</div>
+    @endif
+</div>
+@endif
+
 {{-- Automatic Variance Detection (Section 23) --}}
 <div class="kpi-card mb-3">
     <h6 class="text-primary">Automatic Variance Detection</h6>
@@ -117,7 +144,7 @@
         <div class="col-md-8"><label class="form-label">Remarks (mandatory for Return/Hold)</label><textarea class="form-control" name="remarks"></textarea></div>
     </div>
     <div class="mt-3">
-        @can('audit.approve')<button class="btn btn-success" name="decision" value="APPROVE">Approve & Send to Billing</button>@endcan
+        @can('audit.approve')<button class="btn btn-success" name="decision" value="APPROVE" {{ $slaBlocksAudit ? 'disabled' : '' }}>Approve & Send to Billing</button>@endcan
         @can('audit.return')<button class="btn btn-outline-secondary" name="decision" value="RETURN">Return to Loader for Correction</button>@endcan
         @can('audit.hold')<button class="btn btn-warning" name="decision" value="HOLD">Hold</button>@endcan
     </div>

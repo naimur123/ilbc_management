@@ -16,58 +16,72 @@
     @can('billing.clearance.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuBilling"><i class="bi bi-shield-check"></i> Billing Clearance <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('billing-clearance.*') ? 'show' : '' }}" id="menuBilling">
-        <a class="nav-link" href="{{ route('billing-clearance.index', ['status' => 'pending']) }}">Pending Clearance</a>
-        <a class="nav-link" href="{{ route('billing-clearance.index', ['status' => 'cleared']) }}">Cleared Requests</a>
-        <a class="nav-link" href="{{ route('billing-clearance.index', ['status' => 'rejected']) }}">Rejected / Hold</a>
-        <a class="nav-link" href="{{ route('billing-clearance.index', ['status' => 'outstanding']) }}">Credit / Outstanding</a>
+        <a class="nav-link" href="{{ route('billing-clearance.index') }}">Pending Clearance</a>
+        <a class="nav-link" href="{{ route('billing-clearance.index', ['filter' => 'cleared']) }}">Cleared Requests</a>
+        <a class="nav-link" href="{{ route('billing-clearance.index', ['filter' => 'hold']) }}">Rejected / Hold</a>
+        <a class="nav-link" href="{{ route('billing-clearance.index', ['filter' => 'outstanding']) }}">Credit / Outstanding</a>
     </div>
     @endcan
 
     @can('review.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuReview"><i class="bi bi-person-check"></i> Reviewer Approval <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('reviewer.*') ? 'show' : '' }}" id="menuReview">
-        <a class="nav-link" href="{{ route('reviewer.index', ['status' => 'pending']) }}">Pending Review</a>
-        <a class="nav-link" href="{{ route('reviewer.index', ['status' => 'approved']) }}">Approved Requests</a>
-        <a class="nav-link" href="{{ route('reviewer.index', ['status' => 'returned']) }}">Returned / Rejected</a>
-        <a class="nav-link" href="{{ route('reviewer.index', ['status' => 'hold']) }}">On Hold</a>
+        <a class="nav-link" href="{{ route('reviewer.index') }}">Pending Review</a>
+        <a class="nav-link" href="{{ route('reviewer.index', ['filter' => 'approved']) }}">Approved Requests</a>
+        <a class="nav-link" href="{{ route('reviewer.index', ['filter' => 'returned']) }}">Returned / Rejected</a>
+        <a class="nav-link" href="{{ route('reviewer.index', ['filter' => 'hold']) }}">On Hold</a>
     </div>
     @endcan
 
     @can('loading.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuLoading"><i class="bi bi-box-seam"></i> Loading / Installation <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('loading.*') ? 'show' : '' }}" id="menuLoading">
-        <a class="nav-link" href="{{ route('loading.index', ['status' => 'pending']) }}">Pending Loading</a>
-        <a class="nav-link" href="{{ route('loading.index', ['status' => 'mine']) }}">My Loading</a>
-        <a class="nav-link" href="{{ route('loading.index', ['status' => 'completed']) }}">Completed Loading</a>
+        <a class="nav-link" href="{{ route('loading.index') }}">Pending Loading</a>
+        <a class="nav-link" href="{{ route('loading.index', ['filter' => 'mine']) }}">My Loading</a>
+        <a class="nav-link" href="{{ route('loading.index', ['filter' => 'completed']) }}">Completed Loading</a>
+    </div>
+    @endcan
+
+    @can('sla.view')
+    <a class="nav-link" data-bs-toggle="collapse" href="#menuSla"><i class="bi bi-stopwatch"></i> SLA Management <i class="bi bi-chevron-down float-end"></i></a>
+    <div class="collapse submenu {{ request()->routeIs('sla.*') ? 'show' : '' }}" id="menuSla">
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'pending']) }}">SLA Pending</a>
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'active']) }}">SLA Active</a>
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'due_soon']) }}">Due Soon</a>
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'overdue']) }}">Overdue</a>
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'completed']) }}">Completed</a>
+        <a class="nav-link" href="{{ route('sla.index', ['filter' => 'exceptions']) }}">SLA Exceptions</a>
+        @can('sla.report')<a class="nav-link" href="{{ route('sla.report') }}">SLA Report</a>@endcan
+        @can('sla.configure')<a class="nav-link" href="{{ route('sla.configuration') }}">SLA Configuration</a>@endcan
     </div>
     @endcan
 
     @can('audit.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuAudit"><i class="bi bi-clipboard-data"></i> Audit <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('audit.*') ? 'show' : '' }}" id="menuAudit">
-        <a class="nav-link" href="{{ route('audit.index', ['status' => 'pending']) }}">Audit Pending</a>
-        <a class="nav-link" href="{{ route('audit.index', ['status' => 'approved']) }}">Approved</a>
-        <a class="nav-link" href="{{ route('audit.index', ['status' => 'returned']) }}">Returned for Correction</a>
-        <a class="nav-link" href="{{ route('audit.index', ['status' => 'hold']) }}">On Hold</a>
+        <a class="nav-link" href="{{ route('audit.index') }}">Audit Pending</a>
+        <a class="nav-link" href="{{ route('audit.index', ['filter' => 'approved']) }}">Approved</a>
+        <a class="nav-link" href="{{ route('audit.index', ['filter' => 'returned']) }}">Returned for Correction</a>
+        <a class="nav-link" href="{{ route('audit.index', ['filter' => 'hold']) }}">On Hold</a>
     </div>
     @endcan
 
     @can('invoice.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuInvoice"><i class="bi bi-receipt"></i> Billing & Invoice <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('billing-invoice.*') ? 'show' : '' }}" id="menuInvoice">
-        <a class="nav-link" href="{{ route('billing-invoice.index', ['status' => 'pending']) }}">Pending Invoice</a>
-        <a class="nav-link" href="{{ route('billing-invoice.index', ['status' => 'generated']) }}">Invoice Generated</a>
-        <a class="nav-link" href="{{ route('billing-invoice.index', ['status' => 'sent']) }}">Invoice Sent</a>
-        <a class="nav-link" href="{{ route('billing-invoice.index', ['status' => 'done']) }}">Billing Done</a>
+        <a class="nav-link" href="{{ route('billing-invoice.index') }}">Pending Invoice</a>
+        <a class="nav-link" href="{{ route('billing-invoice.index', ['filter' => 'generated']) }}">Invoice Generated</a>
+        <a class="nav-link" href="{{ route('billing-invoice.index', ['filter' => 'sent']) }}">Invoice Sent</a>
+        <a class="nav-link" href="{{ route('billing-invoice.index', ['filter' => 'done']) }}">Billing Done</a>
     </div>
     @endcan
 
     @can('closure.view')
     <a class="nav-link" data-bs-toggle="collapse" href="#menuClosure"><i class="bi bi-lock"></i> Closure <i class="bi bi-chevron-down float-end"></i></a>
     <div class="collapse submenu {{ request()->routeIs('closure.*') ? 'show' : '' }}" id="menuClosure">
-        <a class="nav-link" href="{{ route('closure.index', ['status' => 'ready']) }}">Ready for Closure</a>
-        <a class="nav-link" href="{{ route('closure.index', ['status' => 'closed']) }}">Closed Requests</a>
-        <a class="nav-link" href="{{ route('closure.index', ['status' => 'reopened']) }}">Reopened Requests</a>
+        <a class="nav-link" href="{{ route('closure.index') }}">Ready for Closure</a>
+        <a class="nav-link" href="{{ route('closure.index', ['filter' => 'closed']) }}">Closed Requests</a>
+        <a class="nav-link" href="{{ route('closure.index', ['filter' => 'reopened']) }}">Reopened Requests</a>
     </div>
     @endcan
 

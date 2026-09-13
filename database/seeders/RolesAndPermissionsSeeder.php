@@ -33,6 +33,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         'loading.view', 'loading.process', 'loading.complete', 'loading.edit',
 
+        // SLA Management (change request, Sept 2026): view the SLA queues
+        // and reports; manage = complete/create SLA records day-to-day;
+        // waive = management-approved exception; configure = the SLA
+        // Configuration rules screen and the "required before Audit" toggle.
+        'sla.view', 'sla.manage', 'sla.waive', 'sla.configure', 'sla.report',
+
         'audit.view', 'audit.approve', 'audit.return', 'audit.hold',
 
         'invoice.view', 'invoice.create', 'invoice.edit', 'invoice.mark_sent', 'invoice.mark_done',
@@ -60,6 +66,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.view', 'request.view', 'request.view_all',
             'sales.view_cost', 'sales.view_margin',
             'review.view', 'vendor.view', 'loading.view', 'audit.view', 'invoice.view', 'closure.view',
+            'sla.view', 'sla.waive', 'sla.report',
             'report.view', 'report.export', 'audit_log.view',
         ],
         'Sales' => [
@@ -78,11 +85,12 @@ class RolesAndPermissionsSeeder extends Seeder
         ],
         'Loader' => [
             'dashboard.view', 'request.view', 'request.view_all',
-            'loading.view', 'loading.process', 'loading.complete', 'loading.edit', 'report.view',
+            'loading.view', 'loading.process', 'loading.complete', 'loading.edit',
+            'sla.view', 'sla.manage', 'report.view',
         ],
         'Auditor' => [
             'dashboard.view', 'request.view', 'request.view_all',
-            'audit.view', 'audit.approve', 'audit.return', 'audit.hold', 'report.view',
+            'audit.view', 'audit.approve', 'audit.return', 'audit.hold', 'sla.view', 'report.view',
         ],
         'Closer' => [
             'dashboard.view', 'request.view', 'request.view_all',
@@ -94,7 +102,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'invoice.view', 'report.view', 'report.export', 'audit_log.view',
         ],
         'View Only' => [
-            'dashboard.view', 'request.view', 'request.view_all', 'report.view',
+            'dashboard.view', 'request.view', 'request.view_all', 'sla.view', 'report.view',
         ],
     ];
 

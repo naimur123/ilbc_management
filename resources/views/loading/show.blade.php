@@ -46,18 +46,18 @@
 <div class="kpi-card mb-3">
     <h6 class="text-primary">Loading Details</h6>
     <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Loading Date</label><input type="date" class="form-control" name="loading_date" value="{{ old('loading_date', $lr?->loading_date?->format('Y-m-d')) }}"></div>
-        <div class="col-md-3"><label class="form-label">Loading Time</label><input type="time" class="form-control" name="loading_time" value="{{ old('loading_time', $lr?->loading_time) }}"></div>
-        <div class="col-md-3"><label class="form-label">Actual Loaded Quantity</label><input type="number" step="0.01" class="form-control" name="actual_loaded_quantity" value="{{ old('actual_loaded_quantity', $lr?->actual_loaded_quantity) }}"></div>
-        <div class="col-md-3"><label class="form-label">Tenant / Account</label><input class="form-control" name="tenant_account" value="{{ old('tenant_account', $lr?->tenant_account) }}"></div>
-        <div class="col-md-3"><label class="form-label">Subscription ID</label><input class="form-control" name="subscription_id" value="{{ old('subscription_id', $lr?->subscription_id) }}"></div>
-        <div class="col-md-3"><label class="form-label">License ID</label><input class="form-control" name="license_id" value="{{ old('license_id', $lr?->license_id) }}"></div>
-        <div class="col-md-3"><label class="form-label">Activation Date</label><input type="date" class="form-control" name="activation_date" value="{{ old('activation_date', $lr?->activation_date?->format('Y-m-d')) }}"></div>
-        <div class="col-md-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiry_date" value="{{ old('expiry_date', $lr?->expiry_date?->format('Y-m-d')) }}"></div>
-        <div class="col-md-4"><label class="form-label">Vendor Reference</label><input class="form-control" name="vendor_reference" value="{{ old('vendor_reference', $lr?->vendor_reference) }}"></div>
-        <div class="col-md-4"><label class="form-label">Distributor Reference</label><input class="form-control" name="distributor_reference" value="{{ old('distributor_reference', $lr?->distributor_reference) }}"></div>
-        <div class="col-md-4"><label class="form-label">PO Reference</label><input class="form-control" name="po_reference" value="{{ old('po_reference', $lr?->po_reference) }}"></div>
-        <div class="col-12"><label class="form-label">Technical Notes</label><textarea class="form-control" name="technical_notes">{{ old('technical_notes', $lr?->technical_notes) }}</textarea></div>
+        <div class="col-md-3"><label class="form-label">Loading Date</label><input type="date" class="form-control" name="loading_date" value="{{ old('loading_date', $lr->loading_date?->format('Y-m-d')) }}"></div>
+        <div class="col-md-3"><label class="form-label">Loading Time</label><input type="time" class="form-control" name="loading_time" value="{{ old('loading_time', $lr->loading_time) }}"></div>
+        <div class="col-md-3"><label class="form-label">Actual Loaded Quantity</label><input type="number" step="0.01" class="form-control" name="actual_loaded_quantity" value="{{ old('actual_loaded_quantity', $lr->actual_loaded_quantity) }}"></div>
+        <div class="col-md-3"><label class="form-label">Tenant / Account</label><input class="form-control" name="tenant_account" value="{{ old('tenant_account', $lr->tenant_account) }}"></div>
+        <div class="col-md-3"><label class="form-label">Subscription ID</label><input class="form-control" name="subscription_id" value="{{ old('subscription_id', $lr->subscription_id) }}"></div>
+        <div class="col-md-3"><label class="form-label">License ID</label><input class="form-control" name="license_id" value="{{ old('license_id', $lr->license_id) }}"></div>
+        <div class="col-md-3"><label class="form-label">Activation Date</label><input type="date" class="form-control" name="activation_date" value="{{ old('activation_date', $lr->activation_date?->format('Y-m-d')) }}"></div>
+        <div class="col-md-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiry_date" value="{{ old('expiry_date', $lr->expiry_date?->format('Y-m-d')) }}"></div>
+        <div class="col-md-4"><label class="form-label">Vendor Reference</label><input class="form-control" name="vendor_reference" value="{{ old('vendor_reference', $lr->vendor_reference) }}"></div>
+        <div class="col-md-4"><label class="form-label">Distributor Reference</label><input class="form-control" name="distributor_reference" value="{{ old('distributor_reference', $lr->distributor_reference) }}"></div>
+        <div class="col-md-4"><label class="form-label">PO Reference</label><input class="form-control" name="po_reference" value="{{ old('po_reference', $lr->po_reference) }}"></div>
+        <div class="col-12"><label class="form-label">Technical Notes</label><textarea class="form-control" name="technical_notes">{{ old('technical_notes', $lr->technical_notes) }}</textarea></div>
     </div>
 </div>
 
