@@ -46,7 +46,7 @@
 <div class="kpi-card mb-3">
     <h6 class="text-primary">Loading Details</h6>
     <div class="row g-3">
-        <div class="col-md-3"><label class="form-label">Loading Date</label><input type="date" class="form-control" name="loading_date" value="{{ old('loading_date', $lr?->loading_date->format('Y-m-d')) }}"></div>
+        <div class="col-md-3"><label class="form-label">Loading Date</label><input type="date" class="form-control" name="loading_date" value="{{ old('loading_date', $lr?->loading_date?->format('Y-m-d')) }}"></div>
         <div class="col-md-3"><label class="form-label">Loading Time</label><input type="time" class="form-control" name="loading_time" value="{{ old('loading_time', $lr?->loading_time) }}"></div>
         <div class="col-md-3"><label class="form-label">Actual Loaded Quantity</label><input type="number" step="0.01" class="form-control" name="actual_loaded_quantity" value="{{ old('actual_loaded_quantity', $lr?->actual_loaded_quantity) }}"></div>
         <div class="col-md-3"><label class="form-label">Tenant / Account</label><input class="form-control" name="tenant_account" value="{{ old('tenant_account', $lr?->tenant_account) }}"></div>
