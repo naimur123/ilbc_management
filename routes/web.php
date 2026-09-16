@@ -36,9 +36,9 @@ use App\Http\Controllers\WorkflowSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    if (! file_exists(storage_path('installed.lock'))) {
-        return redirect()->route('install.welcome');
-    }
+    // if (! file_exists(storage_path('installed.lock'))) {
+    //     return redirect()->route('install.welcome');
+    // }
 
     return redirect()->route('login');
 });
