@@ -11,7 +11,7 @@ class RequestItem extends Model
 
     protected $fillable = [
         'request_id', 'product_category_id', 'product_id', 'product_sku_id', 'description',
-        'quantity', 'billing_type_id', 'subscription_type_id', 'start_date', 'end_date',
+        'quantity', 'commitment_type_id', 'billing_type_id', 'is_recurring', 'recurring_months', 'subscription_type_id', 'start_date', 'end_date',
         'unit_selling_price', 'total_selling_price', 'status',
     ];
 
@@ -49,11 +49,16 @@ class RequestItem extends Model
     {
         return $this->belongsTo(ProductSku::class, 'product_sku_id');
     }
-
     public function billingType()
     {
         return $this->belongsTo(BillingType::class);
     }
+
+    public function commitmentType()
+    {
+        return $this->belongsTo(CommitmentType::class);
+    }
+
 
     public function subscriptionType()
     {

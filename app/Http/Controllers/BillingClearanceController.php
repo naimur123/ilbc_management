@@ -35,7 +35,7 @@ class BillingClearanceController extends Controller
     public function show(WorkRequest $request)
     {
         Gate::denyIf(! auth()->user()->can('billing.clearance.view'));
-        $request->load('customer', 'salesperson', 'items.product', 'items.sku', 'salesEntry');
+        $request->load('customer', 'salesperson', 'items.product', 'items.sku', 'salesEntry', 'items.commitmentType', 'items.billingType');
 
         return view('billing-clearance.show', compact('request'));
     }

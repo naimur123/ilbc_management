@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BillingType;
+use App\Models\CommitmentType;
 use App\Models\Customer;
 use App\Models\Department;
 use App\Models\PaymentTerm;
@@ -61,6 +62,7 @@ class RequestController extends Controller
             'departments' => Department::orderBy('name')->get(),
             'paymentTerms' => PaymentTerm::orderBy('name')->get(),
             'categories' => ProductCategory::with(['products.skus'])->orderBy('sort_order')->get(),
+            'commitmentTypes' => CommitmentType::orderBy('name')->get(),
             'billingTypes' => BillingType::orderBy('name')->get(),
             'subscriptionTypes' => SubscriptionType::orderBy('name')->get(),
         ]);
@@ -81,9 +83,8 @@ class RequestController extends Controller
             'source_lead' => 'nullable|string|max:100',
             'customer_type' => 'nullable|string|max:50',
             'payment_terms_id' => 'nullable|exists:payment_terms,id',
-            'advance_percent' => 'nullable|integer|min:0|max:100',
+            'advance_amount' => 'nullable|numeric|min:0',
             'credit_days' => 'nullable|integer|min:0|max:365',
-            'billing_cycle' => 'nullable|string|max:30',
             'remarks' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_category_id' => 'required|exists:product_categories,id',
@@ -91,7 +92,10 @@ class RequestController extends Controller
             'items.*.product_sku_id' => 'required|exists:product_skus,id',
             'items.*.description' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.commitment_type_id' => 'nullable|exists:commitment_types,id',
             'items.*.billing_type_id' => 'nullable|exists:billing_types,id',
+            'items.*.is_recurring' => 'nullable|boolean',
+            'items.*.recurring_months' => 'nullable',
             'items.*.subscription_type_id' => 'nullable|exists:subscription_types,id',
             'items.*.start_date' => 'nullable|date',
             'items.*.end_date' => 'nullable|date',
@@ -100,7 +104,7 @@ class RequestController extends Controller
             'quotation_upload' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'submit_action' => 'required|in:draft,submit',
         ]);
-
+    
         $workRequest = DB::transaction(function () use ($data, $request) {
             $workRequest = WorkRequest::create([
                 'request_no' => WorkRequest::generateRequestNo(),
@@ -124,7 +128,7 @@ class RequestController extends Controller
                 'source_lead' => $data['source_lead'] ?? null,
                 'customer_type' => $data['customer_type'] ?? null,
                 'payment_terms_id' => $data['payment_terms_id'] ?? null,
-                'advance_percent' => $data['advance_percent'] ?? 0,
+                'advance_amount' => $data['advance_amount'] ?? 0,
                 'credit_days' => $data['credit_days'] ?? 0,
                 'billing_cycle' => $data['billing_cycle'] ?? null,
                 'remarks' => $data['remarks'] ?? null,
@@ -138,7 +142,10 @@ class RequestController extends Controller
                     'product_sku_id' => $itemData['product_sku_id'],
                     'description' => $itemData['description'] ?? null,
                     'quantity' => $itemData['quantity'],
+                    'commitment_type_id' => $itemData['commitment_type_id'] ?? null,
                     'billing_type_id' => $itemData['billing_type_id'] ?? null,
+                    'is_recurring' => $itemData['is_recurring'] ?? 0,
+                    'recurring_months' => $itemData['recurring_months'] ?? 0,
                     'subscription_type_id' => $itemData['subscription_type_id'] ?? null,
                     'start_date' => $itemData['start_date'] ?? null,
                     'end_date' => $itemData['end_date'] ?? null,

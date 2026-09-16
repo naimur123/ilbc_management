@@ -52,8 +52,59 @@
         <div class="col-md-3"><label class="form-label">Tenant / Account</label><input class="form-control" name="tenant_account" value="{{ old('tenant_account', $lr?->tenant_account) }}"></div>
         <div class="col-md-3"><label class="form-label">Subscription ID</label><input class="form-control" name="subscription_id" value="{{ old('subscription_id', $lr?->subscription_id) }}"></div>
         <div class="col-md-3"><label class="form-label">License ID</label><input class="form-control" name="license_id" value="{{ old('license_id', $lr?->license_id) }}"></div>
-        <div class="col-md-3"><label class="form-label">Activation Date</label><input type="date" class="form-control" name="activation_date" value="{{ old('activation_date', $lr?->activation_date?->format('Y-m-d')) }}"></div>
-        <div class="col-md-3"><label class="form-label">Expiry Date</label><input type="date" class="form-control" name="expiry_date" value="{{ old('expiry_date', $lr?->expiry_date?->format('Y-m-d')) }}"></div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Commitment Type</label>
+            <select class="form-select" name="commitment_type_id" id="commitment_type">
+                <option value="" {{ old('commitment_type_id', $lr?->commitment_type_id) ? '' : 'selected' }}>-- Select --</option>
+                @foreach($commitmentTypes as $ct)
+                    <option value="{{ $ct->id }}" 
+                        data-duration="{{ (stripos($ct->name,'annual') !== false) ? 'annual' : ((stripos($ct->name,'month') !== false) ? 'monthly' : '') }}" 
+                        {{ (old('commitment_type_id', $lr?->commitment_type_id) == $ct->id) ? 'selected' : '' }}>
+                        {{ $ct->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Billing Type</label>
+            <select class="form-select" name="billing_type_id" id="billing_type">
+                <option value="" {{ old('billing_type_id', $lr?->billing_type_id) ? '' : 'selected' }}>-- Select --</option>
+                @foreach($billingTypes as $bt)
+                    <option value="{{ $bt->id }}" 
+                        data-frequency="{{ (stripos($bt->name,'month') !== false) ? 'monthly' : '' }}" 
+                        {{ (old('billing_type_id', $lr?->billing_type_id) == $bt->id) ? 'selected' : '' }}>
+                        {{ $bt->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end" id="recurringContainer" style="display: none !important;">
+            <div class="form-check p-2 px-3 bg-warning-subtle border border-warning rounded w-100 d-flex align-items-center gap-2">
+                <input class="form-check-input mt-0 fs-5" type="checkbox" name="is_recurring" id="is_recurring" value="1" {{ old('is_recurring', $lr?->is_recurring) ? 'checked' : '' }}>
+                <label class="form-check-label fw-bold text-dark mb-0 cursor-pointer" for="is_recurring">
+                    <i class="bi bi-arrow-repeat text-primary me-1"></i> Is Recurring?
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-3" id="recurringMonthsContainer" style="display: none;">
+            <label class="form-label">Recurring Months</label>
+            <input type="number" class="form-control" name="recurring_months" id="recurring_months" min="1" placeholder="e.g. 12" value="{{ old('recurring_months', $lr?->recurring_months) }}">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Activation Date</label>
+            <input type="date" class="form-control" name="activation_date" id="activation_date" value="{{ old('activation_date', $lr?->activation_date?->format('Y-m-d')) }}">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Expiry Date</label>
+            <input type="date" class="form-control" name="expiry_date" id="expiry_date" value="{{ old('expiry_date', $lr?->expiry_date?->format('Y-m-d')) }}">
+        </div>
+
         <div class="col-md-4"><label class="form-label">Vendor Reference</label><input class="form-control" name="vendor_reference" value="{{ old('vendor_reference', $lr?->vendor_reference) }}"></div>
         <div class="col-md-4"><label class="form-label">Distributor Reference</label><input class="form-control" name="distributor_reference" value="{{ old('distributor_reference', $lr?->distributor_reference) }}"></div>
         <div class="col-md-4"><label class="form-label">PO Reference</label><input class="form-control" name="po_reference" value="{{ old('po_reference', $lr?->po_reference) }}"></div>
@@ -68,6 +119,7 @@
         <div class="col-md-3"><label class="form-label">Vendor Confirmation</label><input type="file" class="form-control" name="vendor_confirmation"></div>
         <div class="col-md-3"><label class="form-label">CSP Screenshot</label><input type="file" class="form-control" name="csp_screenshot"></div>
         <div class="col-md-3"><label class="form-label">Subscription Confirmation</label><input type="file" class="form-control" name="subscription_confirmation"></div>
+        <div class="col-md-3"><label class="form-label">SLA Document</label><input type="file" class="form-control" name="sla_document"></div>
     </div>
     @if($lr && $lr->attachments->count())
     <div class="mt-2">
@@ -103,4 +155,114 @@
 </div>
 </form>
 @endcan
+
+<script>
+(function(){
+    const billingSelect = document.getElementById('billing_type');
+    const commitmentSelect = document.getElementById('commitment_type');
+    const activationInput = document.getElementById('activation_date');
+    const expiryInput = document.getElementById('expiry_date');
+    const recurringContainer = document.getElementById('recurringContainer');
+    const isRecurringCheckbox = document.getElementById('is_recurring');
+    const recurringMonthsContainer = document.getElementById('recurringMonthsContainer');
+
+    function updateRecurringVisibility(){
+        if(!billingSelect || !recurringContainer) return;
+        
+        const opt = billingSelect.options[billingSelect.selectedIndex];
+        const freq = opt?.dataset?.frequency;
+
+        if(freq === 'monthly'){
+            recurringContainer.style.setProperty('display', 'flex', 'important');
+        } else {
+            recurringContainer.style.setProperty('display', 'none', 'important');
+            if(isRecurringCheckbox) isRecurringCheckbox.checked = false;
+        }
+        toggleRecurringMonths();
+    }
+
+    function toggleRecurringMonths(){
+        if(!recurringMonthsContainer) return;
+
+        if(isRecurringCheckbox && isRecurringCheckbox.checked && recurringContainer.style.display !== 'none'){
+            recurringMonthsContainer.style.display = 'block';
+        } else {
+            recurringMonthsContainer.style.display = 'none';
+        }
+    }
+
+    function addMonths(dateString, months){
+        const parts = dateString.split('-');
+        if(parts.length !== 3) return null;
+
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+
+        const d = new Date(year, month + months, day);
+        if (d.getDate() !== day) {
+            d.setDate(0);
+        } else {
+            d.setDate(d.getDate() - 1);
+        }
+        return d;
+    }
+
+    function formatDate(d){
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function updateExpiry(){
+        const act = activationInput?.value;
+        if(!act || !commitmentSelect) {
+            if (!act && expiryInput) expiryInput.value = '';
+            return;
+        }
+
+        const opt = commitmentSelect.options[commitmentSelect.selectedIndex];
+        const duration = opt?.dataset?.duration;
+
+        let monthsToAdd = 0;
+        if(duration === 'annual'){
+            monthsToAdd = 12;
+        } else if(duration === 'monthly'){
+            monthsToAdd = 1;
+        }
+
+        if(monthsToAdd > 0){
+            const calculatedDate = addMonths(act, monthsToAdd);
+            if(calculatedDate){
+                expiryInput.value = formatDate(calculatedDate);
+            }
+        }
+    }
+
+    function handleCommitmentChange(){
+        if(activationInput) activationInput.value = '';
+        if(expiryInput) expiryInput.value = '';
+    }
+
+    if(billingSelect){
+        billingSelect.addEventListener('change', updateRecurringVisibility);
+    }
+    if(isRecurringCheckbox){
+        isRecurringCheckbox.addEventListener('change', toggleRecurringMonths);
+    }
+    if(commitmentSelect){
+        commitmentSelect.addEventListener('change', function(){
+            handleCommitmentChange();
+            updateExpiry();
+        });
+    }
+    if(activationInput){
+        activationInput.addEventListener('change', updateExpiry);
+    }
+
+    updateRecurringVisibility();
+    updateExpiry();
+})();
+</script>
 @endsection

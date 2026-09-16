@@ -49,7 +49,7 @@
                 <tr><th class="text-muted">Work Order</th><td>{{ $request->work_order_no ?: '-' }}</td></tr>
                 <tr><th class="text-muted">PO Number</th><td>{{ $request->po_number ?: '-' }}</td></tr>
                 <tr><th class="text-muted">Contact</th><td>{{ $request->salesEntry->contact_person ?? '-' }} / {{ $request->salesEntry->mobile ?? '-' }}</td></tr>
-                <tr><th class="text-muted">Payment Terms</th><td>{{ $request->salesEntry->paymentTerm->name ?? '-' }} ({{ $request->salesEntry->advance_percent ?? 0 }}% advance, {{ $request->salesEntry->credit_days ?? 0 }} days credit)</td></tr>
+                <tr><th class="text-muted">Payment Terms</th><td>{{ $request->salesEntry->paymentTerm->name ?? '-' }} ({{ $request->salesEntry->advance_amount ?? 0 }} advance, {{ $request->salesEntry->credit_days ?? 0 }} days credit)</td></tr>
             </table>
         </div>
     </div>

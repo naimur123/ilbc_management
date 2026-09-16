@@ -42,7 +42,7 @@
     @can('vendor.price_manage')
     <div class="alert alert-warning mt-3">
         <i class="bi bi-exclamation-triangle"></i> A vendor price must exist for this SKU before it can be compared and selected here.
-        <a href="{{ route('vendor-prices.create', ['sku_id' => $item->sku->id, 'return_to' => url()->current()]) }}" class="btn btn-sm btn-primary ms-2">Add Vendor Price for {{ $item->sku->sku_code ?? 'this SKU' }}</a>
+        <a href="{{ route('vendor-prices.create', ['sku_id' => $item->sku->id, 'return_to' => url()->current()]) }}" class="btn btn-sm btn-primary ms-2" target="__blank">Add Vendor Price for {{ $item->sku->sku_code ?? 'this SKU' }}</a>
     </div>
     @else
     <div class="alert alert-warning mt-3">

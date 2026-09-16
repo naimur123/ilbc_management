@@ -98,7 +98,10 @@ class AuditService
         $this->auditLog->record('Audit', 'Audit approved, sent to Billing', $record->requestItem->request_id);
     }
 
-    public function returnToLoader(AuditRecord $record, string $category, string $remarks): void
+    /**
+     * @param array|string $categories one or more category strings
+     */
+    public function returnToLoader(AuditRecord $record, array|string $categories, string $remarks): void
     {
         $record->update([
             'decision' => 'RETURN',
@@ -107,10 +110,14 @@ class AuditService
             'audited_at' => now(),
         ]);
 
-        $record->corrections()->create(['category' => $category, 'remarks' => $remarks]);
+        $cats = is_array($categories) ? $categories : [$categories];
+        foreach ($cats as $cat) {
+            $record->corrections()->create(['category' => $cat, 'remarks' => $remarks]);
+        }
         $record->loadingRecord->update(['status' => 'IN_PROGRESS']);
 
-        $this->auditLog->record('Audit', "Returned to Loader for correction: {$category}", $record->requestItem->request_id, null, $remarks);
+        $catList = implode(', ', $cats);
+        $this->auditLog->record('Audit', "Returned to Loader for correction: {$catList}", $record->requestItem->request_id, null, $remarks);
     }
 
     public function hold(AuditRecord $record, string $remarks): void

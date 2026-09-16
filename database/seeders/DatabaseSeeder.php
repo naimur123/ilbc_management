@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             MasterDataSeeder::class,
             MicrosoftProductCatalogSeeder::class,
+            CommitmentTypeSeeder::class
         ]);
 
         if (config('ilbc.seed_demo_data')) {

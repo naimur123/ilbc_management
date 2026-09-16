@@ -112,7 +112,7 @@ class DemoDataSeeder extends Seeder
                 'email' => $customer->email,
                 'customer_type' => $customer->customer_type,
                 'payment_terms_id' => $customer->payment_terms_id,
-                'advance_percent' => 0,
+                'advance_amount' => 0,
                 'credit_days' => 30,
                 'billing_cycle' => 'Monthly',
                 'remarks' => 'Demo request seeded for a fresh install — walk it through Billing Clearance > Reviewer > Loading > Audit > Billing > Closure.',

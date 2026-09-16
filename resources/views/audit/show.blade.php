@@ -88,7 +88,16 @@
                 <tr><th class="text-muted">Subscription ID</th><td>{{ $lr->subscription_id ?? '-' }}</td></tr>
                 <tr><th class="text-muted">License ID</th><td>{{ $lr->license_id ?? '-' }}</td></tr>
                 <tr><th class="text-muted">Tenant / Account</th><td>{{ $lr->tenant_account ?? '-' }}</td></tr>
-                <tr><th class="text-muted">Activation / Expiry</th><td>{{ optional($lr?->activation_date)->format('d-m-Y') }} - {{ optional($lr?->expiry_date)->format('d-m-Y') }}</td></tr>
+                <tr><th class="text-muted">Commiment Type</th><td>{{ $lr->commitmentType->name ?? '-' }}</td></tr>
+                <tr><th class="text-muted">Billing Type</th><td>{{ $lr->billingType->name ?? '-' }}</td></tr>
+                @if(!empty($lr->is_recurring))
+                  <tr><th class="text-muted">Is Recurring</th><td>Yes</td></tr>
+                @endif
+                @if(!empty($lr->recurring_months))
+                  <tr><th class="text-muted">Recurring Months</th><td>{{ $lr->recurring_months }}</td></tr>
+                @endif
+                <tr><th class="text-muted">Tenant / Account</th><td>{{ $lr->tenant_account ?? '-' }}</td></tr>
+                <tr><th class="text-muted">Activation / Expiry</th><td>{{ optional($lr?->activation_date)->format('d-m-Y') }} / {{ optional($lr?->expiry_date)->format('d-m-Y') }}</td></tr>
                 <tr><th class="text-muted">Technical Notes</th><td>{{ $lr->technical_notes ?? '-' }}</td></tr>
             </table>
         </div>
@@ -133,11 +142,11 @@
     @endforeach
     </div>
     <div class="row g-3">
-        <div class="col-md-4"><label class="form-label">Correction Category (if returning)</label>
-            <select class="form-select" name="correction_category">
-                <option value="">-</option>
+        <div class="col-md-4">
+            <label class="form-label">Correction Category (if returning)</label>
+            <select class="form-select select2-multiple" name="correction_category[]" multiple="multiple">
                 @foreach(['Wrong Product','Wrong SKU','Wrong Quantity','Wrong Vendor','Wrong Tenant','Wrong Price','Cost Mismatch','Date Mismatch','Missing Proof','Duplicate Loading','Incomplete Loading','Other'] as $cat)
-                <option value="{{ $cat }}">{{ $cat }}</option>
+                    <option value="{{ $cat }}" {{ in_array($cat, (array) old('correction_category', $record->corrections->pluck('category')->toArray()), true) ? 'selected' : '' }}>{{ $cat }}</option>
                 @endforeach
             </select>
         </div>
@@ -151,3 +160,13 @@
 </form>
 @endcan
 @endsection
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('.select2-multiple').select2({
+            placeholder: "Select categories",
+            allowClear: true
+        });
+    });
+</script>
+@endpush

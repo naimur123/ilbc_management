@@ -15,6 +15,8 @@ use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use App\Models\CommitmentType;
+use App\Models\BillingType;
 
 class LoadingController extends Controller
 {
@@ -147,8 +149,11 @@ class LoadingController extends Controller
             }
             $item->refresh();
         }
+        
+        $commitmentTypes = CommitmentType::all();
+        $billingTypes = BillingType::all();
 
-        return view('loading.show', compact('item'));
+        return view('loading.show', compact('item', 'commitmentTypes', 'billingTypes'));
     }
 
     public function saveDraft(Request $httpRequest, RequestItem $item)
@@ -214,11 +219,16 @@ class LoadingController extends Controller
             'vendor_confirmation' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'csp_screenshot' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'subscription_confirmation' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'sla_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'commitment_type_id' => 'nullable|integer',
+            'billing_type_id' => 'nullable|integer',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_months' => 'nullable',
         ]);
 
         // Files are validated above but never mass-assigned onto the loading
         // record itself — handleUploads() stores them as separate attachments.
-        return \Illuminate\Support\Arr::except($validated, ['screenshot', 'vendor_confirmation', 'csp_screenshot', 'subscription_confirmation']);
+        return \Illuminate\Support\Arr::except($validated, ['screenshot', 'vendor_confirmation', 'csp_screenshot', 'subscription_confirmation', 'sla_document']);
     }
 
     private function syncChecklist(Request $request, $record): void
@@ -232,7 +242,7 @@ class LoadingController extends Controller
 
     private function handleUploads(Request $request, $record): void
     {
-        foreach (['screenshot' => 'SCREENSHOT', 'vendor_confirmation' => 'VENDOR_CONFIRMATION', 'csp_screenshot' => 'CSP_SCREENSHOT', 'subscription_confirmation' => 'SUBSCRIPTION_CONFIRMATION'] as $field => $type) {
+        foreach (['screenshot' => 'SCREENSHOT', 'vendor_confirmation' => 'VENDOR_CONFIRMATION', 'csp_screenshot' => 'CSP_SCREENSHOT', 'subscription_confirmation' => 'SUBSCRIPTION_CONFIRMATION', 'sla_document' => 'SLA_DOCUMENT'] as $field => $type) {
             if ($request->hasFile($field)) {
                 $path = $request->file($field)->store('loading/'.$record->id, 'public');
                 LoadingAttachment::create([

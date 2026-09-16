@@ -72,7 +72,7 @@ class AuditController extends Controller
     {
         Gate::denyIf(! auth()->user()->can('audit.view'));
 
-        $item->load('request.customer', 'request.salesperson', 'request.reviewerApproval.loadingSourceVendor', 'product', 'sku', 'billingType', 'vendorSelection.vendor', 'loadingRecord.attachments');
+        $item->load('request.customer', 'request.salesperson', 'request.reviewerApproval.loadingSourceVendor', 'product', 'sku', 'billingType', 'vendorSelection.vendor', 'loadingRecord.attachments', 'loadingRecord.commitmentType', 'loadingRecord.billingType');
 
         $record = $this->auditService->ensureRecord($item);
 
@@ -94,7 +94,6 @@ class AuditController extends Controller
         $item->request->load('slas');
         $slaSummary = $this->slaMonitoring->summaryForRequest($item->request);
         $slaBlocksAudit = $this->slaMonitoring->auditIsBlocked($item->request);
-
         return view('audit.show', compact('item', 'record', 'variances', 'slaSummary', 'slaBlocksAudit'));
     }
 
@@ -105,7 +104,8 @@ class AuditController extends Controller
         $data = $httpRequest->validate([
             'decision' => 'required|in:APPROVE,RETURN,HOLD',
             'remarks' => 'nullable|string',
-            'correction_category' => 'nullable|string|max:60',
+            'correction_category' => 'nullable|array',
+            'correction_category.*' => 'nullable|string|max:40',
             'checked' => 'nullable|array',
         ]);
 
@@ -136,7 +136,7 @@ class AuditController extends Controller
                 $this->notifications->notifyPermission('invoice.create', 'Billing required', "Request {$request->request_no} is ready for Billing/Invoice.", $request->id, route('billing-invoice.index'));
             }
         } elseif ($data['decision'] === 'RETURN') {
-            $this->auditService->returnToLoader($record, $data['correction_category'] ?? 'Other', $data['remarks']);
+            $this->auditService->returnToLoader($record, $data['correction_category'] ?? ['Other'], $data['remarks']);
             $item->request->update(['status' => 'AUDIT_RETURNED', 'current_stage' => 'LOADING']);
         } else {
             $this->auditService->hold($record, $data['remarks']);
