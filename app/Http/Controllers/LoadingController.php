@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\LoadingProvisioningException;
+use App\Mail\DynamicTemplateMail;
 use App\Models\LoadingAttachment;
 use App\Models\LoadingRecord;
 use App\Models\Request as WorkRequest;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Models\CommitmentType;
 use App\Models\BillingType;
+use App\Services\Email\TemplateMailService;
 
 class LoadingController extends Controller
 {
@@ -170,7 +172,7 @@ class LoadingController extends Controller
         return back()->with('success', 'Loading draft saved.');
     }
 
-    public function complete(Request $httpRequest, RequestItem $item)
+    public function complete(Request $httpRequest, RequestItem $item, TemplateMailService $mailService)
     {
         Gate::denyIf(! $httpRequest->user()->can('loading.complete'));
         $httpRequest->validate(['loading_date' => 'required|date', 'actual_loaded_quantity' => 'required|numeric|min:0.01']);
@@ -193,6 +195,14 @@ class LoadingController extends Controller
             // starts the moment every item in the request finishes Loading.
             $this->slaMonitoring->createForRequest($request);
             $this->notifications->notifyPermission('audit.approve', 'Audit required', "Request {$request->request_no} is ready for Audit.", $request->id, route('audit.index'));
+
+            /* Send Customer Mail */
+            $placeholders = $this->buildLoadingPlaceholders($item, $record);
+            $toEmail = $placeholders['customer_email'];
+
+            if (filled($toEmail)) {
+                $mailService->send('loading-done', $placeholders, $toEmail, [], 'microsoft_graph');
+            }
         }
 
         $this->auditLog->record('Loading', 'Item loading completed', $request->id);
@@ -255,5 +265,41 @@ class LoadingController extends Controller
                 ]);
             }
         }
+    }
+
+    private function buildLoadingPlaceholders(RequestItem $item, LoadingRecord $record): array
+        {
+            $item->loadMissing([
+                'request.customer',
+                'request.salesperson',
+                'product',
+                'sku',
+                'subscriptionType',
+                'commitmentType',
+                'billingType',
+                'loadingRecord.commitmentType',
+                'loadingRecord.billingType',
+            ]);
+        
+            $customer    = $item->request?->customer;
+            $salesperson = $item->request?->salesperson;
+        
+            return [
+                'company'        => config('app.company_name', 'Dhrubo Networks'),
+                'customer_name'  => $customer?->name ?? '',
+                'customer_email' => $customer?->email ?? '',
+                'solution_name'  => $item->product?->name ?? $item->sku?->name ?? $item->description ?? '',
+                'quantity'       => (string) ($record->actual_loaded_quantity ?? $item->quantity),
+                'order_Type'     => $item->subscriptionType?->name ?? ($item->is_recurring ? 'Recurring' : 'One-Time'),
+                'commitment'     => $record->commitmentType?->name ?? $item->commitmentType?->name ?? 'N/A',
+                'billing_type'   => $record->billingType?->name ?? $item->billingType?->name ?? 'N/A',
+                'start_date'     => $record->activation_date?->format('d M, Y') ?? $item->start_date?->format('d M, Y') ?? '',
+                'end_date'       => $record->expiry_date?->format('d M, Y') ?? $item->end_date?->format('d M, Y') ?? '',
+                'phone'          => config('app.support_phone', '+880 9638-000000'),
+                'full_name'      => $salesperson?->name ?? 'Account Manager',
+                'user_phone'     => $salesperson?->phone ?? '',
+                'email'          => $salesperson?->email ?? '',
+                'customer_review_link' => route('customer_ack', ['customer_id' => $customer?->id, 'item' => $item, 'record' => $record])
+            ];
     }
 }

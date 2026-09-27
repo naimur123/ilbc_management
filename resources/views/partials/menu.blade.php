@@ -131,5 +131,7 @@
     @can('workflow.manage')<a class="nav-link" href="{{ route('workflow-settings.edit') }}"><i class="bi bi-diagram-3"></i> Workflow & Settings</a>@endcan
     @can('settings.manage')<a class="nav-link" href="{{ route('settings.edit') }}"><i class="bi bi-gear"></i> System Settings</a>@endcan
     @can('audit_log.view')<a class="nav-link" href="{{ route('audit-logs.index') }}"><i class="bi bi-journal-text"></i> Audit Logs</a>@endcan
+    @can('settings.manage')<a class="nav-link" href="{{ route('email-templates.index') }}"><i class="fa-regular fa-file-code"></i> Email Templates</a>@endcan
+    @can('settings.manage')<a class="nav-link" href="{{ route('failed-mail-logs.index') }}"><i class="bi bi-envelope-exclamation"></i> Failed Emails</a>@endcan
     @endcanany
 </div>

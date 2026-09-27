@@ -17,6 +17,9 @@ use App\Http\Controllers\LoadingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerAcknowledgeController;
+use App\Http\Controllers\EmailTemplateController;
+use App\Http\Controllers\FailedMailLogController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductSkuController;
@@ -168,4 +171,16 @@ Route::middleware('auth')->group(function () {
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+
+    /* Email */
+    Route::resource('email-templates', EmailTemplateController::class);
+    Route::get('failed-mail-logs', [FailedMailLogController::class, 'index'])->name('failed-mail-logs.index');
+    Route::post('failed-mail-logs/{failedMailLog}/resend', [FailedMailLogController::class, 'resend'])->name('failed-mail-logs.resend');
+    Route::delete('/email-template-attachments/{attachment}', [EmailTemplateController::class, 'attachment_destroy'])
+    ->name('email-template-attachments.destroy');
+
 });
+    
+/* Customer Review  */
+Route::get('/customer_ack/{customer_id}/{item}/{record}', [CustomerAcknowledgeController::class, 'index'])->name('customer_ack');
+Route::post('/customer_ack/add', [CustomerAcknowledgeController::class, 'addCustomerAck'])->name('customer_ack.add');

@@ -73,6 +73,12 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'custom_daily' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/log_' . date('Y_m_dd') . '.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

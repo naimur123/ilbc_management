@@ -13,3 +13,6 @@ Artisan::command('inspire', function () {
 // Requires the cPanel cron entry from README section A6
 // (`php artisan schedule:run` every minute) to actually fire.
 Schedule::command('sla:process')->everyFifteenMinutes();
+
+// Retry eligible failed emails; each row is capped at five automatic attempts.
+Schedule::command('mail:retry-failed')->everyFiveMinutes()->withoutOverlapping();
