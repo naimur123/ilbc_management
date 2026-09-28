@@ -10,7 +10,7 @@ class LoadingRecord extends Model
         'request_item_id', 'loading_date', 'loading_time', 'actual_loaded_quantity',
         'subscription_id', 'license_id', 'tenant_account', 'activation_date', 'expiry_date',
         'vendor_reference', 'distributor_reference', 'po_reference', 'technical_notes',
-        'status', 'loaded_by', 'completed_at', 'commitment_type_id', 'billing_type_id', 'is_recurring', 'recurring_months'
+        'status', 'loaded_by', 'completed_at', 'commitment_type_id', 'billing_type_id', 'is_recurring', 'recurring_months','domain'
     ];
 
     protected $casts = [

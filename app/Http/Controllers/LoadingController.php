@@ -198,7 +198,7 @@ class LoadingController extends Controller
 
             /* Send Customer Mail */
             $placeholders = $this->buildLoadingPlaceholders($item, $record);
-            $toEmail = $placeholders['customer_email'];
+            $toEmail = $item->request->salesEntry?->email ?? $placeholders['customer_email'];
 
             if (filled($toEmail)) {
                 $mailService->send('loading-done', $placeholders, $toEmail, [], 'microsoft_graph');
@@ -234,6 +234,7 @@ class LoadingController extends Controller
             'billing_type_id' => 'nullable|integer',
             'is_recurring' => 'nullable|boolean',
             'recurring_months' => 'nullable',
+            'domain' => 'required',
         ]);
 
         // Files are validated above but never mass-assigned onto the loading

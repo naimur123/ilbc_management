@@ -60,7 +60,7 @@ class RequestController extends Controller
             'customers' => Customer::where('status', 'ACTIVE')->orderBy('name')->get(),
             'salespersons' => Salesperson::where('is_active', true)->orderBy('name')->get(),
             'departments' => Department::orderBy('name')->get(),
-            'paymentTerms' => PaymentTerm::orderBy('name')->get(),
+            'paymentTerms' => PaymentTerm::where('is_active', 1)->orderBy('name')->get(),
             'categories' => ProductCategory::with(['products.skus'])->orderBy('sort_order')->get(),
             'commitmentTypes' => CommitmentType::orderBy('name')->get(),
             'billingTypes' => BillingType::orderBy('name')->get(),
@@ -82,7 +82,7 @@ class RequestController extends Controller
             'email' => 'nullable|email|max:150',
             'source_lead' => 'nullable|string|max:100',
             'customer_type' => 'nullable|string|max:50',
-            'payment_terms_id' => 'nullable|exists:payment_terms,id',
+            'payment_terms_id' => 'required',
             'advance_amount' => 'nullable|numeric|min:0',
             'credit_days' => 'nullable|integer|min:0|max:365',
             'remarks' => 'nullable|string',
@@ -130,7 +130,6 @@ class RequestController extends Controller
                 'payment_terms_id' => $data['payment_terms_id'] ?? null,
                 'advance_amount' => $data['advance_amount'] ?? 0,
                 'credit_days' => $data['credit_days'] ?? 0,
-                'billing_cycle' => $data['billing_cycle'] ?? null,
                 'remarks' => $data['remarks'] ?? null,
             ]);
 

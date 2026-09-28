@@ -97,8 +97,12 @@ class ReviewerController extends Controller
         // list (change request, Sept 2026) — which vendor will perform the
         // loading/installation, not the old free-text DIRECT_CSP/DISTRIBUTOR pair.
         $vendors = Vendor::where('status', 'ACTIVE')->orderBy('name')->get();
+        $autoLoadingVendorId = $request->items
+                                ->pluck('vendorSelection.vendor_id')
+                                ->filter()
+                                ->first();
 
-        return view('reviewer.show', compact('request', 'approval', 'vendors'));
+        return view('reviewer.show', compact('request', 'approval', 'vendors', 'autoLoadingVendorId'));
     }
 
     public function saveChecklist(Request $httpRequest, WorkRequest $request)
