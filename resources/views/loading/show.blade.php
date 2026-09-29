@@ -40,7 +40,7 @@
                     </tr>
                     <tr>
                         <th class="text-muted">Subscription Type</th>
-                        <td>{{ $item->subscriptionType->name ?? '-' }}</td>
+                        <td>{{ $item->subscriptionType->name === 'Upgrade' ? $item->subscriptionType->name . ' (' .$item->total_month .' Months)' : $item->subscriptionType->name ?? '-' }}</td>
                     </tr>
                     <tr>
                         <th class="text-muted">Start / End</th>
@@ -116,7 +116,7 @@
                     <div class="col-md-3"><label class="form-label">Subscription ID</label><input class="form-control"
                             name="subscription_id" value="{{ old('subscription_id', $lr?->subscription_id) }}"></div>
                     <div class="col-md-3"><label class="form-label">License ID</label><input class="form-control"
-                            name="license_id" value="{{ old('license_id', $lr?->license_id) }}"></div>
+                            name="license_id" value="{{ old('license_id', $item->sku->sku_code ?? $lr?->license_id) }}"></div>
 
                     <div class="col-md-3">
                         <label class="form-label">Commitment Type</label>
@@ -164,6 +164,9 @@
                         <input type="number" class="form-control" name="recurring_months" id="recurring_months"
                             min="1" placeholder="e.g. 12"
                             value="{{ old('recurring_months', $lr?->recurring_months) }}">
+                        <div class="text-danger small mt-1" id="recurringMonthsAlert" role="alert" style="display: none;">
+                            Recurring months is greater than 12.
+                        </div>
                     </div>
 
                     <div class="col-md-3">
@@ -261,6 +264,18 @@
             const recurringContainer = document.getElementById('recurringContainer');
             const isRecurringCheckbox = document.getElementById('is_recurring');
             const recurringMonthsContainer = document.getElementById('recurringMonthsContainer');
+            const recurringMonthsInput = document.getElementById('recurring_months');
+            const recurringMonthsAlert = document.getElementById('recurringMonthsAlert');
+
+            function updateRecurringMonthsAlert() {
+                if (!recurringMonthsInput || !recurringMonthsAlert) return;
+                const showAlert = recurringMonthsInput.value !== '' && Number(recurringMonthsInput.value) > 12;
+                recurringMonthsInput.classList.toggle('is-invalid', showAlert);
+                recurringMonthsAlert.style.display = showAlert ? 'block' : 'none';
+            }
+
+            recurringMonthsInput?.addEventListener('input', updateRecurringMonthsAlert);
+            updateRecurringMonthsAlert();
 
             function updateRecurringVisibility() {
                 if (!billingSelect || !recurringContainer) return;

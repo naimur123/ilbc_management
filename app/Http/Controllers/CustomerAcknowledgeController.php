@@ -70,8 +70,7 @@ class CustomerAcknowledgeController extends Controller
                 )
                 ->get();
 
-        $declaration =
-            'We hereby confirm that the information provided in this License Acknowledgement Form is accurate and complete. We acknowledge and accept the applicable licensing, subscription, usage, payment, and service terms and agree to use the licensed products and services only for lawful and authorized purposes.';
+        $declaration = 'We hereby confirm that the information provided in this License Acknowledgement Form is accurate and complete. We acknowledge and accept the applicable licensing, subscription, usage, payment, and service terms and agree to use the licensed products and services only for lawful and authorized purposes.';
 
         return view(
             'customer-ack.view',

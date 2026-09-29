@@ -12,7 +12,7 @@ class RequestItem extends Model
     protected $fillable = [
         'request_id', 'product_category_id', 'product_id', 'product_sku_id', 'description',
         'quantity', 'commitment_type_id', 'billing_type_id', 'is_recurring', 'recurring_months', 'subscription_type_id', 'start_date', 'end_date',
-        'unit_selling_price', 'total_selling_price', 'status',
+        'unit_selling_price', 'total_selling_price', 'status', 'total_month'
     ];
 
     protected $casts = [

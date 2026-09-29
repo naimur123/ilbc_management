@@ -29,3 +29,6 @@ yarn-error.log
 /storage
 storage/framework/sessions/h1jvxN54qoHwwCmsM5mngz4RnBnoxrtfsC2jC1BN
 /storage
+resources/views/requests/create_copy2.blade.php
+storage/framework/sessions/h1jvxN54qoHwwCmsM5mngz4RnBnoxrtfsC2jC1BN
+/storage

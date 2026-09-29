@@ -10,18 +10,21 @@
 </ul>
 <div class="kpi-card p-0">
     <table class="table table-sm table-hover mb-0 align-middle">
-        <thead class="table-light"><tr><th>Request No.</th><th>Customer</th><th>Total Selling</th><th>Invoice No.</th><th>Status</th><th></th></tr></thead>
+        <thead class="table-light"><tr><th>Request No.</th><th>Customer</th><th>Total Selling</th><th>Invoice No.</th>@if(in_array(request('filter'), ['generated', 'sent', 'done'], true))<th>Invoice Date</th>@endif<th>Status</th><th></th></tr></thead>
         <tbody>
         @forelse($requests as $r)
             <tr>
                 <td>{{ $r->request_no }}</td><td>{{ $r->customer->name ?? '-' }}</td>
                 <td>{{ number_format($r->totalSellingPrice(),2) }}</td>
                 <td>{{ $r->invoices->last()->invoice_no ?? '-' }}</td>
+                @if(in_array(request('filter'), ['generated', 'sent', 'done'], true))
+                    <td>{{ $r->invoices->last()->invoice_date?->format('Y-m-d') ?? '-' }}</td>
+                @endif
                 <td><span class="badge bg-light text-dark border">{{ str_replace('_',' ',$r->status) }}</span></td>
                 <td><a href="{{ route('billing-invoice.show', $r) }}" class="btn btn-sm btn-primary">Open</a></td>
             </tr>
         @empty
-            <tr><td colspan="6" class="text-center text-muted py-4">Nothing here.</td></tr>
+            <tr><td colspan="{{ in_array(request('filter'), ['generated', 'sent', 'done'], true) ? 7 : 6 }}" class="text-center text-muted py-4">Nothing here.</td></tr>
         @endforelse
         </tbody>
     </table>

@@ -179,25 +179,24 @@
                             </th>
 
                             <th style="min-width:140px">
+                                Subscription
+                            </th>
+
+                            <!-- Total Month column (Upgrade only) -->
+                            <th class="subscription-total-month-col-header" style="min-width:150px; display:none;">
+                                Total Month (Upgrade)
+                            </th>
+
+                            <th style="min-width:140px">
                                 Billing Type
                             </th>
 
                             <th class="recurring-col-header" style="min-width:110px; display:none;">
-
                                 Is Recurring
-
                             </th>
 
                             <th class="recurring-months-col-header" style="min-width:140px; display:none;">
-
                                 Recurring Months
-
-                            </th>
-
-                            <th class="subscription-col-header" style="min-width:140px">
-
-                                Subscription
-
                             </th>
 
                             <th style="min-width:120px">
@@ -292,7 +291,7 @@
                         Credit Days
                     </label>
 
-                    <input type="number" class="form-control" name="credit_days" value="0">
+                    <input type="number" class="form-control" name="credit_days" value="" required>
 
                 </div>
 
@@ -432,6 +431,7 @@
                     ];
 
                 if (
+                    selected &&
                     selected.dataset.subName ===
                     'advance'
                 ) {
@@ -457,8 +457,8 @@
 
             function optionsHtml(list, valueKey, labelKey) {
 
-                return '<option value="">-</option>' +
-
+                return '<option value="">' +
+                    '-</option>' +
                     list.map(i =>
                         `<option value="${i[valueKey]}">${i[labelKey]}</option>`
                     ).join('');
@@ -512,68 +512,75 @@
                 return '';
             }
 
-
-            function updateRowEndDateFromCommitment(tr) {
-
-                const startInput =
-                    tr.querySelector(
-                        'input[name$="[start_date]"]'
-                    );
-
-                const endInput =
-                    tr.querySelector(
-                        'input[name$="[end_date]"]'
-                    );
-
-                const commitmentSelect =
-                    tr.querySelector(
-                        'select[name$="[commitment_type_id]"]'
-                    );
-
-
-                if (
-                    !startInput ||
-                    !endInput ||
-                    !commitmentSelect
-                )
-                    return;
-
-
-                const commitmentName =
-                    getSelectedText(commitmentSelect);
-
-
-                if (!startInput.value) {
-
-                    endInput.value = '';
-
-                    return;
-                }
-
-
-                if (/annual/i.test(commitmentName)) {
-
-                    endInput.value =
-                        addMonths(
-                            startInput.value,
-                            12
-                        );
-
-                    return;
-                }
-
-
-                if (/monthly/i.test(commitmentName)) {
-
-                    endInput.value =
-                        addMonths(
-                            startInput.value,
-                            1
-                        );
-                }
-
+            function getSelectedNameFromList(select, list) {
+                if (!select) return '';
+                const selectedValue = select.value;
+                const selectedType = list.find(
+                    item => String(item.id) === String(selectedValue)
+                );
+                if (selectedType?.name) return String(selectedType.name).trim();
+                return (select.options[select.selectedIndex]?.text || '').trim();
             }
 
+            function isSubscriptionUpgrade(tr) {
+                const subscriptionSelect = tr.querySelector('select[name$="[subscription_type_id]"]');
+                if (!subscriptionSelect) return false;
+
+                const subscriptionName = getSelectedNameFromList(subscriptionSelect, SUBSCRIPTION_TYPES);
+                return /upgrade/i.test(subscriptionName);
+            }
+
+            function updateRowEndDateFromCommitment(tr) {
+                const startInput = tr.querySelector('input[name$="[start_date]"]');
+                const endInput = tr.querySelector('input[name$="[end_date]"]');
+                const commitmentSelect = tr.querySelector('select[name$="[commitment_type_id]"]');
+
+                if (!startInput || !endInput || !commitmentSelect) return;
+
+                const commitmentName = getSelectedText(commitmentSelect);
+
+                if (!startInput.value) {
+                    endInput.value = '';
+                    return;
+                }
+
+                if (/annual/i.test(commitmentName)) {
+                    endInput.value = addMonths(startInput.value, 12);
+                    return;
+                }
+
+                if (/monthly/i.test(commitmentName)) {
+                    endInput.value = addMonths(startInput.value, 1);
+                }
+            }
+
+            function updateRowEndDate(tr) {
+                const startInput = tr.querySelector('input[name$="[start_date]"]');
+                const endInput = tr.querySelector('input[name$="[end_date]"]');
+                const totalMonthInput = tr.querySelector('input[name$="[total_month]"]');
+
+                if (!startInput || !endInput) return;
+
+                if (!startInput.value) {
+                    endInput.value = '';
+                    return;
+                }
+
+                // If Subscription is Upgrade, calculate end date based on total_month
+                if (isSubscriptionUpgrade(tr)) {
+                    const months = parseInt(totalMonthInput?.value, 10);
+
+                    if (Number.isFinite(months) && months > 0) {
+                        endInput.value = addMonths(startInput.value, months);
+                    } else {
+                        endInput.value = '';
+                    }
+                    return;
+                }
+
+                // Otherwise fallback to Commitment Type
+                updateRowEndDateFromCommitment(tr);
+            }
 
             function resetRowDates(tr) {
 
@@ -596,6 +603,58 @@
 
             }
 
+            function updateSubscriptionTotalMonthVisibility() {
+                const anyUpgrade = Array.from(document.querySelectorAll('#itemsBody tr')).some(tr => isSubscriptionUpgrade(tr));
+
+                // Show/hide main header column
+                document.querySelectorAll('.subscription-total-month-col-header').forEach(el => {
+                    el.style.display = anyUpgrade ? '' : 'none';
+                });
+
+                // Update cells for each row
+                document.querySelectorAll('#itemsBody tr').forEach(tr => {
+                    const totalMonthCell = tr.querySelector('.subscription-total-month-cell');
+                    if (totalMonthCell) {
+                        // Cell displays only if header is active AND this row is an Upgrade
+                        if (anyUpgrade) {
+                            if (isSubscriptionUpgrade(tr)) {
+                                totalMonthCell.style.display = '';
+                                const input = totalMonthCell.querySelector('input');
+                                if (input) input.style.visibility = 'visible';
+                            } else {
+                                totalMonthCell.style.display = '';
+                                const input = totalMonthCell.querySelector('input');
+                                if (input) {
+                                    input.style.visibility = 'hidden';
+                                    input.value = ''; // clear value when not upgrade
+                                }
+                            }
+                        } else {
+                            totalMonthCell.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            function enforceRecurringMonthsMax12(tr) {
+                const recurringMonthsInput = tr.querySelector('.recurring-months-input');
+                if (!recurringMonthsInput) return;
+
+                const valStr = recurringMonthsInput.value.trim();
+                if (!valStr) {
+                    recurringMonthsInput.classList.remove('text-danger', 'is-invalid');
+                    return;
+                }
+
+                const numbers = valStr.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+                const exceeds12 = numbers.some(num => num > 12);
+
+                if (exceeds12) {
+                    recurringMonthsInput.classList.add('text-danger', 'is-invalid');
+                } else {
+                    recurringMonthsInput.classList.remove('text-danger', 'is-invalid');
+                }
+            }
 
             function isMonthlyBillingType(select) {
 
@@ -653,11 +712,6 @@
                 const showRecurringCol =
                     checkHasMonthlyRows();
 
-
-                /*
-                 * Toggle Is Recurring & Recurring Months headers
-                 */
-
                 document
                     .querySelectorAll(
                         '.recurring-col-header'
@@ -685,10 +739,6 @@
 
                     });
 
-
-                /*
-                 * Update every row
-                 */
 
                 document
                     .querySelectorAll(
@@ -750,12 +800,7 @@
 
                         if (recurringCheckbox) {
 
-                            /*
-                             * Only monthly rows can be recurring.
-                             */
-
                             recurringCheckbox.disabled = !isMonthlyRow;
-
 
                             if (!isMonthlyRow) {
 
@@ -774,10 +819,12 @@
 
                         }
 
+                        enforceRecurringMonthsMax12(tr);
+
                     });
 
+                updateSubscriptionTotalMonthVisibility();
             }
-
 
             function addItemRow() {
 
@@ -792,61 +839,36 @@
                 tr.innerHTML = `
 
                 <td>
-
                     <select
                         class="form-select form-select-sm cat-select"
                         name="items[${i}][product_category_id]"
                         required>
-
-                        <option value="">
-                            Select
-                        </option>
-
+                        <option value="">Select</option>
                         ${CATALOG.map(c =>
-                            `<option value="${c.id}">
-                                        ${c.name}
-                                    </option>`
+                            `<option value="${c.id}">${c.name}</option>`
                         ).join('')}
-
                     </select>
-
                 </td>
 
-
                 <td>
-
                     <select
                         class="form-select form-select-sm prod-select"
                         name="items[${i}][product_id]"
                         required>
-
-                        <option value="">
-                            Select category first
-                        </option>
-
+                        <option value="">Select category first</option>
                     </select>
-
                 </td>
 
-
                 <td>
-
                     <select
                         class="form-select form-select-sm sku-select"
                         name="items[${i}][product_sku_id]"
                         required>
-
-                        <option value="">
-                            Select product first
-                        </option>
-
+                        <option value="">Select product first</option>
                     </select>
-
                 </td>
 
-
                 <td>
-
                     <input
                         type="number"
                         min="0.01"
@@ -855,110 +877,82 @@
                         name="items[${i}][quantity]"
                         value="1"
                         required>
-
                 </td>
 
-
                 <td>
-
                     <select
                         class="form-select form-select-sm"
                         name="items[${i}][commitment_type_id]">
-
-                        ${optionsHtml(
-                            COMMITMENT_TYPES,
-                            'id',
-                            'name'
-                        )}
-
+                        ${optionsHtml(COMMITMENT_TYPES, 'id', 'name')}
                     </select>
-
                 </td>
 
+                <td class="subscription-cell">
+                    <select
+                        class="form-select form-select-sm subscription_type_select"
+                        name="items[${i}][subscription_type_id]">
+                        ${optionsHtml(SUBSCRIPTION_TYPES, 'id', 'name')}
+                    </select>
+                </td>
+
+                <!-- total_month input cell -->
+                <td
+                    class="subscription-total-month-cell"
+                    style="display:none;">
+                    <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        class="form-control form-control-sm total-month-input"
+                        name="items[${i}][total_month]"
+                        placeholder="Month(s)"
+                        value="">
+                </td>
 
                 <td>
-
                     <select
                         class="form-select form-select-sm billing_type-select"
                         name="items[${i}][billing_type_id]">
-
-                        ${optionsHtml(
-                            BILLING_TYPES,
-                            'id',
-                            'name'
-                        )}
-
+                        ${optionsHtml(BILLING_TYPES, 'id', 'name')}
                     </select>
-
                 </td>
-
 
                 <td
                     class="recurring-cell text-center align-middle"
                     style="display:none;">
-
                     <input
                         type="checkbox"
                         class="form-check-input recurring-checkbox"
                         name="items[${i}][is_recurring]"
                         value="1">
-
                 </td>
-
 
                 <td
                     class="recurring-months-cell align-middle"
                     style="display:none;">
-
                     <input
                         type="text"
                         class="form-control form-control-sm recurring-months-input"
                         name="items[${i}][recurring_months]"
                         placeholder="e.g. 1, 2, 3"
                         disabled>
-
                 </td>
-
-
-                <td class="subscription-cell">
-
-                    <select
-                        class="form-select form-select-sm"
-                        name="items[${i}][subscription_type_id]">
-
-                        ${optionsHtml(
-                            SUBSCRIPTION_TYPES,
-                            'id',
-                            'name'
-                        )}
-
-                    </select>
-
-                </td>
-
 
                 <td>
-
                     <input
                         type="date"
                         class="form-control form-control-sm"
                         name="items[${i}][start_date]">
-
                 </td>
 
-
                 <td>
-
                     <input
                         type="date"
                         class="form-control form-control-sm"
                         name="items[${i}][end_date]">
-
                 </td>
 
-
                 <td>
-
                     <input
                         type="number"
                         min="0"
@@ -967,33 +961,23 @@
                         name="items[${i}][unit_selling_price]"
                         value="0"
                         required>
-
                 </td>
 
-
                 <td>
-
                     <input
                         type="text"
                         class="form-control form-control-sm row-total"
                         readonly
                         value="0.00">
-
                 </td>
 
-
                 <td>
-
                     <button
                         type="button"
                         class="btn btn-sm btn-outline-danger remove-row">
-
                         <i class="bi bi-trash"></i>
-
                     </button>
-
                 </td>
-
             `;
 
 
@@ -1003,339 +987,109 @@
 
 
                 /*
-                 * Select elements
+                 * Elements
                  */
 
-                const catSelect =
-                    tr.querySelector('.cat-select');
+                const catSelect = tr.querySelector('.cat-select');
+                const prodSelect = tr.querySelector('.prod-select');
+                const skuSelect = tr.querySelector('.sku-select');
+                const billingTypeSelect = tr.querySelector('.billing_type-select');
+                const commitmentSelect = tr.querySelector('select[name$="[commitment_type_id]"]');
+                const subscriptionSelect = tr.querySelector('select[name$="[subscription_type_id]"]');
+                const startInput = tr.querySelector('input[name$="[start_date]"]');
+                const totalMonthInput = tr.querySelector('input[name$="[total_month]"]');
+                const recurringCheckbox = tr.querySelector('.recurring-checkbox');
+                const recurringMonthsInput = tr.querySelector('.recurring-months-input');
 
-                const prodSelect =
-                    tr.querySelector('.prod-select');
-
-                const skuSelect =
-                    tr.querySelector('.sku-select');
-
-                const billingTypeSelect =
-                    tr.querySelector(
-                        '.billing_type-select'
-                    );
-
-                const commitmentSelect =
-                    tr.querySelector(
-                        'select[name$="[commitment_type_id]"]'
-                    );
-
-                const startInput =
-                    tr.querySelector(
-                        'input[name$="[start_date]"]'
-                    );
-
-
-                /*
-                 * Recurring controls
-                 */
-
-                const recurringCheckbox =
-                    tr.querySelector(
-                        '.recurring-checkbox'
-                    );
-
-                const recurringMonthsInput =
-                    tr.querySelector(
-                        '.recurring-months-input'
-                    );
-
-
-                /*
-                 * Toggle recurring months input on checkbox toggle
-                 */
-
-                recurringCheckbox.addEventListener(
-                    'change',
-                    () => {
-
-                        if (recurringCheckbox.checked) {
-
-                            recurringMonthsInput.disabled = false;
-
-                            recurringMonthsInput.focus();
-
-                        } else {
-
-                            recurringMonthsInput.value = '';
-
-                            recurringMonthsInput.disabled = true;
-
-                        }
-
+                recurringCheckbox.addEventListener('change', () => {
+                    if (recurringCheckbox.checked) {
+                        recurringMonthsInput.disabled = false;
+                        recurringMonthsInput.focus();
+                    } else {
+                        recurringMonthsInput.value = '';
+                        recurringMonthsInput.disabled = true;
                     }
-                );
+                    enforceRecurringMonthsMax12(tr);
+                });
 
+                recurringMonthsInput.addEventListener('input', () => {
+                    enforceRecurringMonthsMax12(tr);
+                });
 
-                /*
-                 * Category change
-                 */
+                catSelect.addEventListener('change', () => {
+                    const cat = CATALOG.find(c => c.id == catSelect.value);
+                    prodSelect.innerHTML = cat ? optionsHtml(cat.products, 'id', 'name') : '<option value="">Select category first</option>';
+                    skuSelect.innerHTML = '<option value="">Select product first</option>';
+                });
 
-                catSelect.addEventListener(
-                    'change',
-                    () => {
+                prodSelect.addEventListener('change', () => {
+                    const cat = CATALOG.find(c => c.id == catSelect.value);
+                    const prod = cat?.products.find(p => p.id == prodSelect.value);
+                    skuSelect.innerHTML = prod ? optionsHtml(prod.skus, 'id', 'name') : '<option value="">Select product first</option>';
+                });
 
-                        const cat =
-                            CATALOG.find(
-                                c =>
-                                c.id ==
-                                catSelect.value
-                            );
-
-
-                        prodSelect.innerHTML =
-                            cat ?
-                            optionsHtml(
-                                cat.products,
-                                'id',
-                                'name'
-                            ) :
-                            '<option value="">Select category first</option>';
-
-
-                        skuSelect.innerHTML =
-                            '<option value="">Select product first</option>';
-
+                billingTypeSelect.addEventListener('change', () => {
+                    resetRowDates(tr);
+                    if (!isMonthlyBillingType(billingTypeSelect)) {
+                        recurringCheckbox.checked = false;
+                        recurringMonthsInput.value = '';
+                        recurringMonthsInput.disabled = true;
                     }
-                );
+                    updateTableColumnVisibility();
+                });
 
-
-                /*
-                 * Product change
-                 */
-
-                prodSelect.addEventListener(
-                    'change',
-                    () => {
-
-                        const cat =
-                            CATALOG.find(
-                                c =>
-                                c.id ==
-                                catSelect.value
-                            );
-
-
-                        const prod =
-                            cat?.products.find(
-                                p =>
-                                p.id ==
-                                prodSelect.value
-                            );
-
-
-                        skuSelect.innerHTML =
-                            prod ?
-                            optionsHtml(
-                                prod.skus,
-                                'id',
-                                'name'
-                            ) :
-                            '<option value="">Select product first</option>';
-
-                    }
-                );
-
+                commitmentSelect.addEventListener('change', () => {
+                    resetRowDates(tr);
+                    updateRowEndDate(tr);
+                });
 
                 /*
-                 * Billing type change
+                 * Subscription type change event handler
                  */
 
-                billingTypeSelect.addEventListener(
-                    'change',
-                    () => {
+                subscriptionSelect.addEventListener('change', () => {
+                    updateTableColumnVisibility();
+                    updateRowEndDate(tr);
+                });
 
-                        /*
-                         * Reset dates when billing type changes
-                         */
+                if (totalMonthInput) {
+                    totalMonthInput.addEventListener('input', () => {
+                        updateRowEndDate(tr);
+                    });
+                }
 
-                        resetRowDates(tr);
-
-
-                        /*
-                         * If changed away from monthly,
-                         * force recurring back to unchecked and reset months.
-                         */
-
-                        if (
-                            !isMonthlyBillingType(
-                                billingTypeSelect
-                            )
-                        ) {
-
-                            recurringCheckbox.checked =
-                                false;
-
-                            recurringMonthsInput.value = '';
-
-                            recurringMonthsInput.disabled = true;
-
-                        }
-
-
-                        updateTableColumnVisibility();
-
-                    }
-                );
-
-
-                /*
-                 * Commitment type change
-                 */
-
-                commitmentSelect.addEventListener(
-                    'change',
-                    () => {
-
-                        resetRowDates(tr);
-
-                    }
-                );
-
-
-                /*
-                 * Start date change
-                 */
-
-                startInput.addEventListener(
-                    'change',
-                    () => {
-
-                        updateRowEndDateFromCommitment(
-                            tr
-                        );
-
-                    }
-                );
-
-
-                /*
-                 * Initial column visibility
-                 */
+                startInput.addEventListener('change', () => {
+                    updateRowEndDate(tr);
+                });
 
                 updateTableColumnVisibility();
 
-
-                /*
-                 * Recalculate row total
-                 */
-
                 const recalc = () => {
-
-                    const qty =
-                        parseFloat(
-                            tr.querySelector(
-                                '.qty-input'
-                            ).value
-                        ) || 0;
-
-
-                    const price =
-                        parseFloat(
-                            tr.querySelector(
-                                '.price-input'
-                            ).value
-                        ) || 0;
-
-
-                    tr.querySelector(
-                            '.row-total'
-                        ).value =
-                        (qty * price).toFixed(2);
-
-
+                    const qty = parseFloat(tr.querySelector('.qty-input').value) || 0;
+                    const price = parseFloat(tr.querySelector('.price-input').value) || 0;
+                    tr.querySelector('.row-total').value = (qty * price).toFixed(2);
                     recalcGrandTotal();
-
                 };
 
+                tr.querySelector('.qty-input').addEventListener('input', recalc);
+                tr.querySelector('.price-input').addEventListener('input', recalc);
 
-                tr.querySelector(
-                    '.qty-input'
-                ).addEventListener(
-                    'input',
-                    recalc
-                );
-
-
-                tr.querySelector(
-                    '.price-input'
-                ).addEventListener(
-                    'input',
-                    recalc
-                );
-
-
-                /*
-                 * Remove row
-                 */
-
-                tr.querySelector(
-                    '.remove-row'
-                ).addEventListener(
-                    'click',
-                    () => {
-
-                        tr.remove();
-
-                        updateTableColumnVisibility();
-
-                        recalcGrandTotal();
-
-                    }
-                );
-
+                tr.querySelector('.remove-row').addEventListener('click', () => {
+                    tr.remove();
+                    updateTableColumnVisibility();
+                    recalcGrandTotal();
+                });
             }
-
 
             function recalcGrandTotal() {
-
                 let total = 0;
-
-
-                document
-                    .querySelectorAll(
-                        '.row-total'
-                    )
-                    .forEach(el => {
-
-                        total +=
-                            parseFloat(
-                                el.value
-                            ) || 0;
-
-                    });
-
-
-                document
-                    .getElementById(
-                        'grandTotal'
-                    )
-                    .textContent =
-                    total.toFixed(2);
-
+                document.querySelectorAll('.row-total').forEach(el => {
+                    total += parseFloat(el.value) || 0;
+                });
+                document.getElementById('grandTotal').textContent = total.toFixed(2);
             }
 
-
-            /*
-             * Add product button
-             */
-
-            document
-                .getElementById('addItemBtn')
-                .addEventListener(
-                    'click',
-                    addItemRow
-                );
-
-
-            /*
-             * Add first row automatically
-             */
+            document.getElementById('addItemBtn').addEventListener('click', addItemRow);
 
             addItemRow();
         </script>

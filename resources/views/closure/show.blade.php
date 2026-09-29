@@ -32,14 +32,30 @@
                 <option value="RECEIVED" {{ $br?->collection_status === 'RECEIVED' ? 'selected' : '' }}>Received</option>
             </select>
         </div>
-        <div class="col-md-3"><label class="form-label">Collection Amount</label><input type="number" step="0.01" class="form-control" name="collection_amount" value="{{ $br?->collection_amount }}"></div>
+        <div class="col-md-3"><label class="form-label">Collection Amount</label><input type="number" step="0.01" class="form-control" name="collection_amount" id="collection_amount" value="{{ $br?->collection_amount }}"></div>
         <div class="col-md-3"><label class="form-label">Collection Date</label><input type="date" class="form-control" name="collection_date" value="{{ optional($br?->collection_date)->format('Y-m-d') }}"></div>
-        <div class="col-md-3"><label class="form-label">Outstanding Amount</label><input type="number" step="0.01" class="form-control" name="outstanding_amount" value="{{ $br?->outstanding_amount }}"></div>
+        <div class="col-md-3"><label class="form-label">Outstanding Amount</label><input type="number" step="0.01" class="form-control" name="outstanding_amount" id="outstanding_amount" value="{{ max((float) $request->totalSellingPrice() - (float) ($br?->collection_amount ?? 0), 0) }}" readonly></div>
         <div class="col-md-4"><label class="form-label">Payment Reference</label><input class="form-control" name="payment_reference" value="{{ $br?->payment_reference }}"></div>
         <div class="col-md-4"><label class="form-label">Bank / Payment Method</label><input class="form-control" name="payment_method" value="{{ $br?->payment_method }}"></div>
         <div class="col-md-4 d-flex align-items-end"><button class="btn btn-outline-primary btn-sm">Save Collection Details</button></div>
     </form>
 </div>
+
+<script>
+    (() => {
+        const collectionInput = document.getElementById('collection_amount');
+        const outstandingInput = document.getElementById('outstanding_amount');
+        const totalSelling = {{ (float) $request->totalSellingPrice() }};
+
+        function updateOutstandingAmount() {
+            const collection = Number(collectionInput?.value) || 0;
+            outstandingInput.value = Math.max(totalSelling - collection, 0).toFixed(2);
+        }
+
+        collectionInput?.addEventListener('input', updateOutstandingAmount);
+        updateOutstandingAmount();
+    })();
+</script>
 
 <div class="kpi-card mb-3">
     <h6 class="text-primary">Closure Checklist (Section 10)</h6>

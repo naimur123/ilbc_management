@@ -58,6 +58,11 @@ class ClosureController extends Controller
             'outstanding_amount' => 'nullable|numeric|min:0',
         ]);
 
+        $data['outstanding_amount'] = max(
+            (float) $request->totalSellingPrice() - (float) ($data['collection_amount'] ?? 0),
+            0
+        );
+
         $billing = $request->billingRecord ?? $request->billingRecord()->create([]);
         $billing->fill($data + ['collection_recorded_by' => Auth::id(), 'collection_recorded_at' => now()]);
         $billing->save();
